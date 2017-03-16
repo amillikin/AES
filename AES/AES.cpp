@@ -22,12 +22,11 @@
 #include <ctime>
 
 using namespace std;
-typedef unsigned long long ull;
 int keyType;
 FILE *inStream, *outStream;
 
 //Organizes the steps for encryption - ARM
-ull des(ull block, string actionType) {
+unsigned char[][] aes(unsigned char[4][4] block, string actionType) {
 	/*	Passes block through initial permutation
 	Splits block into 32-bit leftIn and rightIn halves
 	leftOut set to rightIn
@@ -82,8 +81,8 @@ bool validMode(string mode) {
 
 //Returns type of key used: 1) Hex, 2) 8-char (no space) 3) 8-char (with spaces). Else 0 if not valid. - ARM
 int getKeyType(string strIn) {
-	if (strIn.length() == 16) {
-		for (int i = 0; i < 16; i++) {
+	if (strIn.length() == 32) {
+		for (int i = 0; i < 32; i++) {
 			if (!isxdigit(strIn[i])) {
 				cout << "Not a valid key. Must be 16-bit hex or 8-char" << endl;
 				return 0;
@@ -91,7 +90,7 @@ int getKeyType(string strIn) {
 		}
 		return 1;
 	}
-	else if (strIn.length() == 10 && strIn.substr(0, 1) == "'" && strIn.substr(9, 1) == "'") {
+	else if (strIn.length() == 18 && strIn.substr(0, 1) == "'" && strIn.substr(17, 1) == "'") {
 		return 2;
 	}
 	else {
@@ -140,8 +139,8 @@ string upCase(string str) {
 
 void prompt()
 {
-	cout << "Welcome to Aaron's DES Encrypter/Decrypter!" << endl;
-	cout << "Accepted input: DES <-action> <key> <mode> <infile> <outfile>" << endl;
+	cout << "Welcome to Aaron's AES Encrypter/Decrypter!" << endl;
+	cout << "Accepted input: AES <-action> <key> <mode> <infile> <outfile>" << endl;
 }
 
 int main(int argc, char* argv[]) {
