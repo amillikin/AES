@@ -37,13 +37,6 @@ struct stateStruct {
 	unsigned int tempState[4][4];
 };
 
-//Takes a byte and returns the desired lookup index.
-int getIndex(unsigned int byte) {
-	int index = 0;
-	index = (((byte & 0xf0) >> 4) * 16) + (byte & 0xf);
-	return index;
-}
-
 //Lookup Tables for Galois Field Multiplication (2, 3, 9, 11, 13, 14) used in mixColumns
 const unsigned int gfMult2[256]{
 	0x00,0x02,0x04,0x06,0x08,0x0a,0x0c,0x0e,0x10,0x12,0x14,0x16,0x18,0x1a,0x1c,0x1e,
@@ -202,125 +195,28 @@ void invMixColumns(stateStruct state) {
 
 }
 
-/*
-	Uses the following Galois Field multiplcations on each byte in a column
-	in order to get each new byte in a column. Multiplication is done
-	using the respective lookup tables instead of performing the actual calculation.
-	Lookup tables values are selected by determining the correct lookup index using getIndex.
-
-	b0 = 2a0 + 3a1 + 1a2 + 1a3
-	b1 = 1a0 + 2a1 + 3a2 + 1a3
-	b2 = a10 + 1a1 + 2a2 + 3a3
-	b3 = 3a0 + 1a1 + 1a2 + 2a3
-*/
 void mixColumns(stateStruct state) {
-	memcpy(state.curState, state.tempState, sizeof(state.curState));
-
-	state.curState[0][0] = sbox[getIndex(state.curState[0][0])];
 
 }
 
-// Shifts each row left by the value of the row index.
-// i.e. Row 0 rotated right 0, Row 1 rotated right 1, 
-//		Row 2 rotated right 2, Row 3 rotated right 3.
 void invShiftRows(stateStruct state) {
-	memcpy(state.curState, state.tempState, sizeof(state.curState));
 
-	state.curState[1][0] = state.tempState[1][3];
-	state.curState[1][1] = state.tempState[1][0];
-	state.curState[1][2] = state.tempState[1][1];
-	state.curState[1][3] = state.tempState[1][2];
-	state.curState[2][0] = state.tempState[2][2];
-	state.curState[2][1] = state.tempState[2][3];
-	state.curState[2][2] = state.tempState[2][0];
-	state.curState[2][3] = state.tempState[2][1];
-	state.curState[3][0] = state.tempState[3][1];
-	state.curState[3][1] = state.tempState[3][2];
-	state.curState[3][2] = state.tempState[3][3];
-	state.curState[3][3] = state.tempState[3][0];
 }
 
-// Shifts each row left by the value of the row index.
-// i.e. Row 0 rotated left 0, Row 1 rotated left 1, 
-//		Row 2 rotated left 2, Row 3 rotated left 3.
 void shiftRows(stateStruct state) {
-	memcpy(state.curState, state.tempState, sizeof(state.curState));
 
-	state.curState[1][0] = state.tempState[1][1];
-	state.curState[1][1] = state.tempState[1][2];
-	state.curState[1][2] = state.tempState[1][3];
-	state.curState[1][3] = state.tempState[1][0];
-	state.curState[2][0] = state.tempState[2][2];
-	state.curState[2][1] = state.tempState[2][3];
-	state.curState[2][2] = state.tempState[2][0];
-	state.curState[2][3] = state.tempState[2][1];
-	state.curState[3][0] = state.tempState[3][3];
-	state.curState[3][1] = state.tempState[3][0];
-	state.curState[3][2] = state.tempState[3][1];
-	state.curState[3][3] = state.tempState[3][2];
 }
 
-// Passes each byte in the state to getIndex and 
-// uses the returned index with invSBox lookup table to get new value.
 void invSubBytes(stateStruct state) {
-	state.curState[0][0] = invsbox[getIndex(state.curState[0][0])];
-	state.curState[1][0] = invsbox[getIndex(state.curState[1][0])];;
-	state.curState[2][0] = invsbox[getIndex(state.curState[2][0])];;
-	state.curState[3][0] = invsbox[getIndex(state.curState[3][0])];;
-	state.curState[0][1] = invsbox[getIndex(state.curState[0][1])];;
-	state.curState[1][1] = invsbox[getIndex(state.curState[1][1])];;
-	state.curState[2][1] = invsbox[getIndex(state.curState[2][1])];;
-	state.curState[3][1] = invsbox[getIndex(state.curState[3][1])];;
-	state.curState[0][2] = invsbox[getIndex(state.curState[0][2])];;
-	state.curState[1][2] = invsbox[getIndex(state.curState[1][2])];;
-	state.curState[2][2] = invsbox[getIndex(state.curState[2][2])];;
-	state.curState[3][2] = invsbox[getIndex(state.curState[3][2])];;
-	state.curState[0][3] = invsbox[getIndex(state.curState[0][3])];;
-	state.curState[1][3] = invsbox[getIndex(state.curState[1][3])];;
-	state.curState[2][3] = invsbox[getIndex(state.curState[2][3])];;
-	state.curState[3][3] = invsbox[getIndex(state.curState[3][3])];;
+
 }
 
-// Passes each byte in the state to getIndex and 
-// uses the returned index with sBox lookup table to get new value.
 void subBytes(stateStruct state) {
-	state.curState[0][0] = sbox[getIndex(state.curState[0][0])];
-	state.curState[1][0] = sbox[getIndex(state.curState[1][0])];;
-	state.curState[2][0] = sbox[getIndex(state.curState[2][0])];;
-	state.curState[3][0] = sbox[getIndex(state.curState[3][0])];;
-	state.curState[0][1] = sbox[getIndex(state.curState[0][1])];;
-	state.curState[1][1] = sbox[getIndex(state.curState[1][1])];;
-	state.curState[2][1] = sbox[getIndex(state.curState[2][1])];;
-	state.curState[3][1] = sbox[getIndex(state.curState[3][1])];;
-	state.curState[0][2] = sbox[getIndex(state.curState[0][2])];;
-	state.curState[1][2] = sbox[getIndex(state.curState[1][2])];;
-	state.curState[2][2] = sbox[getIndex(state.curState[2][2])];;
-	state.curState[3][2] = sbox[getIndex(state.curState[3][2])];;
-	state.curState[0][3] = sbox[getIndex(state.curState[0][3])];;
-	state.curState[1][3] = sbox[getIndex(state.curState[1][3])];;
-	state.curState[2][3] = sbox[getIndex(state.curState[2][3])];;
-	state.curState[3][3] = sbox[getIndex(state.curState[3][3])];;
+
 }
 
-// XORs each byte in the current state with 
-// the respective byte in the current round key.
 void addRoundKey(stateStruct state, int keyRound) {
-	state.curState[0][0] ^= expRoundKeys[keyRound][0][0];
-	state.curState[1][0] ^= expRoundKeys[keyRound][1][0];
-	state.curState[2][0] ^= expRoundKeys[keyRound][2][0];
-	state.curState[3][0] ^= expRoundKeys[keyRound][3][0];
-	state.curState[0][1] ^= expRoundKeys[keyRound][0][1];
-	state.curState[1][1] ^= expRoundKeys[keyRound][1][1];
-	state.curState[2][1] ^= expRoundKeys[keyRound][2][1];
-	state.curState[3][1] ^= expRoundKeys[keyRound][3][1];
-	state.curState[0][2] ^= expRoundKeys[keyRound][0][2];
-	state.curState[1][2] ^= expRoundKeys[keyRound][1][2];
-	state.curState[2][2] ^= expRoundKeys[keyRound][2][2];
-	state.curState[3][2] ^= expRoundKeys[keyRound][3][2];
-	state.curState[0][3] ^= expRoundKeys[keyRound][0][3];
-	state.curState[1][3] ^= expRoundKeys[keyRound][1][3];
-	state.curState[2][3] ^= expRoundKeys[keyRound][2][3];
-	state.curState[3][3] ^= expRoundKeys[keyRound][3][3];
+	
 }
 
 //Creates all 10 round keys - ARM
