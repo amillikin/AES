@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <ctime>
+#include <math.h>
 
 using namespace std;
 typedef unsigned long long ull;
@@ -27,22 +28,15 @@ int keyType;
 unsigned int expRoundKeys[10][4][4];
 FILE *inStream, *outStream;
 
-struct keyStruct {
-	unsigned int key[4][4];
-};
-
 struct stateStruct {
 	unsigned int curState[4][4];
 	unsigned int prevState[4][4];
 	unsigned int tempState[4][4];
 };
 
-//Takes a byte and returns the desired lookup index.
-int getIndex(unsigned int byte) {
-	int index = 0;
-	index = (((byte & 0xf0) >> 4) * 16) + (byte & 0xf);
-	return index;
-}
+struct keyStruct {
+	unsigned int key[4][4];
+};
 
 //Lookup Tables for Galois Field Multiplication (2, 3, 9, 11, 13, 14) used in mixColumns
 const unsigned int gfMult2[256]{
@@ -198,25 +192,79 @@ const unsigned int invsbox[256]{
 	0x17,0x2b,0x04,0x7e,0xba,0x77,0xd6,0x26,0xe1,0x69,0x14,0x63,0x55,0x21,0x0c,0x7d
 };
 
-void invMixColumns(stateStruct state) {
-
-}
+//Round Constants for use during Key Expansions
+const unsigned int rCon[10]{
+	0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1b, 0x36
+};
 
 /*
 	Uses the following Galois Field multiplcations on each byte in a column
 	in order to get each new byte in a column. Multiplication is done
 	using the respective lookup tables instead of performing the actual calculation.
-	Lookup tables values are selected by determining the correct lookup index using getIndex.
+	Lookup tables values are selected using the byte value as the index.
+
+	b0 = 13a0 + 11a1 + 14a2 + 9a3
+	b1 = 9a0 + 13a1 + 11a2 + 14a3
+	b2 = 14a0 + 9a1 + 13a2 + 11a3
+	b3 = 11a0 + 14a1 + 9a2 + 13a3
+*/
+void invMixColumns(stateStruct state) {
+	memcpy(state.curState, state.tempState, sizeof(state.curState));
+
+	state.curState[0][0] = gfMult13[state.tempState[0][0]] ^ gfMult11[state.tempState[1][0]] ^ gfMult14[state.tempState[2][0]] ^ gfMult9[state.tempState[3][0]];
+	state.curState[1][0] = gfMult9[state.tempState[0][0]] ^ gfMult13[state.tempState[1][0]] ^ gfMult11[state.tempState[2][0]] ^ gfMult14[state.tempState[3][0]];
+	state.curState[2][0] = gfMult14[state.tempState[0][0]] ^ gfMult9[state.tempState[1][0]] ^ gfMult13[state.tempState[2][0]] ^ gfMult11[state.tempState[3][0]];
+	state.curState[3][0] = gfMult11[state.tempState[0][0]] ^ gfMult14[state.tempState[1][0]] ^ gfMult9[state.tempState[2][0]] ^ gfMult13[state.tempState[3][0]];
+
+	state.curState[0][1] = gfMult13[state.tempState[0][1]] ^ gfMult11[state.tempState[1][1]] ^ gfMult14[state.tempState[2][1]] ^ gfMult9[state.tempState[3][1]];
+	state.curState[1][1] = gfMult9[state.tempState[0][1]] ^ gfMult13[state.tempState[1][1]] ^ gfMult11[state.tempState[2][1]] ^ gfMult14[state.tempState[3][1]];
+	state.curState[2][1] = gfMult14[state.tempState[0][1]] ^ gfMult9[state.tempState[1][1]] ^ gfMult13[state.tempState[2][1]] ^ gfMult11[state.tempState[3][1]];
+	state.curState[3][1] = gfMult11[state.tempState[0][1]] ^ gfMult14[state.tempState[1][1]] ^ gfMult9[state.tempState[2][1]] ^ gfMult13[state.tempState[3][1]];
+
+	state.curState[0][2] = gfMult13[state.tempState[0][2]] ^ gfMult11[state.tempState[1][2]] ^ gfMult14[state.tempState[2][2]] ^ gfMult9[state.tempState[3][2]];
+	state.curState[1][2] = gfMult9[state.tempState[0][2]] ^ gfMult13[state.tempState[1][2]] ^ gfMult11[state.tempState[2][2]] ^ gfMult14[state.tempState[3][2]];
+	state.curState[2][2] = gfMult14[state.tempState[0][2]] ^ gfMult9[state.tempState[1][2]] ^ gfMult13[state.tempState[2][2]] ^ gfMult11[state.tempState[3][2]];
+	state.curState[3][2] = gfMult11[state.tempState[0][2]] ^ gfMult14[state.tempState[1][2]] ^ gfMult9[state.tempState[2][2]] ^ gfMult13[state.tempState[3][2]];
+
+	state.curState[0][3] = gfMult13[state.tempState[0][3]] ^ gfMult11[state.tempState[1][3]] ^ gfMult14[state.tempState[2][3]] ^ gfMult9[state.tempState[3][3]];
+	state.curState[1][3] = gfMult9[state.tempState[0][3]] ^ gfMult13[state.tempState[1][3]] ^ gfMult11[state.tempState[2][3]] ^ gfMult14[state.tempState[3][3]];
+	state.curState[2][3] = gfMult14[state.tempState[0][3]] ^ gfMult9[state.tempState[1][3]] ^ gfMult13[state.tempState[2][3]] ^ gfMult11[state.tempState[3][3]];
+	state.curState[3][3] = gfMult11[state.tempState[0][3]] ^ gfMult14[state.tempState[1][3]] ^ gfMult9[state.tempState[2][3]] ^ gfMult13[state.tempState[3][3]];
+}
+
+/*	
+	Uses the following Galois Field multiplcations on each byte in a column
+	in order to get each new byte in a column. Multiplication is done
+	using the respective lookup tables instead of performing the actual calculation.
+	Lookup tables values are selected using the byte value as the index.
 
 	b0 = 2a0 + 3a1 + 1a2 + 1a3
 	b1 = 1a0 + 2a1 + 3a2 + 1a3
-	b2 = a10 + 1a1 + 2a2 + 3a3
+	b2 = 1a0 + 1a1 + 2a2 + 3a3
 	b3 = 3a0 + 1a1 + 1a2 + 2a3
 */
 void mixColumns(stateStruct state) {
 	memcpy(state.curState, state.tempState, sizeof(state.curState));
 
-	state.curState[0][0] = sbox[getIndex(state.curState[0][0])];
+	state.curState[0][0] = gfMult2[state.tempState[0][0]] ^ gfMult3[state.tempState[1][0]] ^ state.tempState[2][0] ^ state.tempState[3][0];
+	state.curState[1][0] = state.tempState[0][0] ^ gfMult2[state.tempState[1][0]] ^ gfMult3[state.tempState[2][0]] ^ state.tempState[3][0];
+	state.curState[2][0] = state.tempState[0][0] ^ state.tempState[1][0] ^ gfMult2[state.tempState[2][0]] ^ gfMult3[state.tempState[3][0]];
+	state.curState[3][0] = gfMult3[state.tempState[0][0]] ^ state.tempState[1][0] ^ state.tempState[2][0] ^ gfMult2[state.tempState[3][0]];
+
+	state.curState[0][1] = gfMult2[state.tempState[0][1]] ^ gfMult3[state.tempState[1][1]] ^ state.tempState[2][1] ^ state.tempState[3][1];
+	state.curState[1][1] = state.tempState[0][1] ^ gfMult2[state.tempState[1][1]] ^ gfMult3[state.tempState[2][1]] ^ state.tempState[3][1];
+	state.curState[2][1] = state.tempState[0][1] ^ state.tempState[1][1] ^ gfMult2[state.tempState[2][1]] ^ gfMult3[state.tempState[3][1]];
+	state.curState[3][1] = gfMult3[state.tempState[0][1]] ^ state.tempState[1][1] ^ state.tempState[2][1] ^ gfMult2[state.tempState[3][1]];
+
+	state.curState[0][2] = gfMult2[state.tempState[0][2]] ^ gfMult3[state.tempState[1][2]] ^ state.tempState[2][2] ^ state.tempState[3][2];
+	state.curState[1][2] = state.tempState[0][2] ^ gfMult2[state.tempState[1][2]] ^ gfMult3[state.tempState[2][2]] ^ state.tempState[3][2];
+	state.curState[2][2] = state.tempState[0][2] ^ state.tempState[1][2] ^ gfMult2[state.tempState[2][2]] ^ gfMult3[state.tempState[3][2]];
+	state.curState[3][2] = gfMult3[state.tempState[0][2]] ^ state.tempState[1][2] ^ state.tempState[2][2] ^ gfMult2[state.tempState[3][2]];
+
+	state.curState[0][3] = gfMult2[state.tempState[0][3]] ^ gfMult3[state.tempState[1][3]] ^ state.tempState[2][3] ^ state.tempState[3][3];
+	state.curState[1][3] = state.tempState[0][3] ^ gfMult2[state.tempState[1][3]] ^ gfMult3[state.tempState[2][3]] ^ state.tempState[3][3];
+	state.curState[2][3] = state.tempState[0][3] ^ state.tempState[1][3] ^ gfMult2[state.tempState[2][3]] ^ gfMult3[state.tempState[3][3]];
+	state.curState[3][3] = gfMult3[state.tempState[0][3]] ^ state.tempState[1][3] ^ state.tempState[2][3] ^ gfMult2[state.tempState[3][3]];
 
 }
 
@@ -259,47 +307,45 @@ void shiftRows(stateStruct state) {
 	state.curState[3][2] = state.tempState[3][1];
 	state.curState[3][3] = state.tempState[3][2];
 }
-
-// Passes each byte in the state to getIndex and 
-// uses the returned index with invSBox lookup table to get new value.
+ 
+// Uses the respective byte as an index with invSBox lookup table to get new value.
 void invSubBytes(stateStruct state) {
-	state.curState[0][0] = invsbox[getIndex(state.curState[0][0])];
-	state.curState[1][0] = invsbox[getIndex(state.curState[1][0])];;
-	state.curState[2][0] = invsbox[getIndex(state.curState[2][0])];;
-	state.curState[3][0] = invsbox[getIndex(state.curState[3][0])];;
-	state.curState[0][1] = invsbox[getIndex(state.curState[0][1])];;
-	state.curState[1][1] = invsbox[getIndex(state.curState[1][1])];;
-	state.curState[2][1] = invsbox[getIndex(state.curState[2][1])];;
-	state.curState[3][1] = invsbox[getIndex(state.curState[3][1])];;
-	state.curState[0][2] = invsbox[getIndex(state.curState[0][2])];;
-	state.curState[1][2] = invsbox[getIndex(state.curState[1][2])];;
-	state.curState[2][2] = invsbox[getIndex(state.curState[2][2])];;
-	state.curState[3][2] = invsbox[getIndex(state.curState[3][2])];;
-	state.curState[0][3] = invsbox[getIndex(state.curState[0][3])];;
-	state.curState[1][3] = invsbox[getIndex(state.curState[1][3])];;
-	state.curState[2][3] = invsbox[getIndex(state.curState[2][3])];;
-	state.curState[3][3] = invsbox[getIndex(state.curState[3][3])];;
+	state.curState[0][0] = invsbox[state.curState[0][0]];
+	state.curState[1][0] = invsbox[state.curState[1][0]];
+	state.curState[2][0] = invsbox[state.curState[2][0]];
+	state.curState[3][0] = invsbox[state.curState[3][0]];
+	state.curState[0][1] = invsbox[state.curState[0][1]];
+	state.curState[1][1] = invsbox[state.curState[1][1]];
+	state.curState[2][1] = invsbox[state.curState[2][1]];
+	state.curState[3][1] = invsbox[state.curState[3][1]];
+	state.curState[0][2] = invsbox[state.curState[0][2]];
+	state.curState[1][2] = invsbox[state.curState[1][2]];
+	state.curState[2][2] = invsbox[state.curState[2][2]];
+	state.curState[3][2] = invsbox[state.curState[3][2]];
+	state.curState[0][3] = invsbox[state.curState[0][3]];
+	state.curState[1][3] = invsbox[state.curState[1][3]];
+	state.curState[2][3] = invsbox[state.curState[2][3]];
+	state.curState[3][3] = invsbox[state.curState[3][3]];
 }
 
-// Passes each byte in the state to getIndex and 
-// uses the returned index with sBox lookup table to get new value.
+// Uses the respective byte as an index with sBox lookup table to get new value.
 void subBytes(stateStruct state) {
-	state.curState[0][0] = sbox[getIndex(state.curState[0][0])];
-	state.curState[1][0] = sbox[getIndex(state.curState[1][0])];;
-	state.curState[2][0] = sbox[getIndex(state.curState[2][0])];;
-	state.curState[3][0] = sbox[getIndex(state.curState[3][0])];;
-	state.curState[0][1] = sbox[getIndex(state.curState[0][1])];;
-	state.curState[1][1] = sbox[getIndex(state.curState[1][1])];;
-	state.curState[2][1] = sbox[getIndex(state.curState[2][1])];;
-	state.curState[3][1] = sbox[getIndex(state.curState[3][1])];;
-	state.curState[0][2] = sbox[getIndex(state.curState[0][2])];;
-	state.curState[1][2] = sbox[getIndex(state.curState[1][2])];;
-	state.curState[2][2] = sbox[getIndex(state.curState[2][2])];;
-	state.curState[3][2] = sbox[getIndex(state.curState[3][2])];;
-	state.curState[0][3] = sbox[getIndex(state.curState[0][3])];;
-	state.curState[1][3] = sbox[getIndex(state.curState[1][3])];;
-	state.curState[2][3] = sbox[getIndex(state.curState[2][3])];;
-	state.curState[3][3] = sbox[getIndex(state.curState[3][3])];;
+	state.curState[0][0] = sbox[state.curState[0][0]];
+	state.curState[1][0] = sbox[state.curState[1][0]];
+	state.curState[2][0] = sbox[state.curState[2][0]];
+	state.curState[3][0] = sbox[state.curState[3][0]];
+	state.curState[0][1] = sbox[state.curState[0][1]];
+	state.curState[1][1] = sbox[state.curState[1][1]];
+	state.curState[2][1] = sbox[state.curState[2][1]];
+	state.curState[3][1] = sbox[state.curState[3][1]];
+	state.curState[0][2] = sbox[state.curState[0][2]];
+	state.curState[1][2] = sbox[state.curState[1][2]];
+	state.curState[2][2] = sbox[state.curState[2][2]];
+	state.curState[3][2] = sbox[state.curState[3][2]];
+	state.curState[0][3] = sbox[state.curState[0][3]];
+	state.curState[1][3] = sbox[state.curState[1][3]];
+	state.curState[2][3] = sbox[state.curState[2][3]];
+	state.curState[3][3] = sbox[state.curState[3][3]];
 }
 
 // XORs each byte in the current state with 
@@ -325,7 +371,56 @@ void addRoundKey(stateStruct state, int keyRound) {
 
 //Creates all 10 round keys - ARM
 void keygen(keyStruct key) {
-	
+	unsigned int t[4] = { 0 };
+
+	for (int i = 0; i <= 10; i++) {
+		if (i = 0) {
+			t[0] = sbox[key.key[3][3]] ^ rCon[i];
+			t[1] = sbox[key.key[0][3]] ^ rCon[i];
+			t[2] = sbox[key.key[1][3]] ^ rCon[i];
+			t[3] = sbox[key.key[2][3]] ^ rCon[i];
+
+			expRoundKeys[i][0][0] = t[0] ^ key.key[0][0];
+			expRoundKeys[i][1][0] = t[1] ^ key.key[1][0];
+			expRoundKeys[i][2][0] = t[2] ^ key.key[2][0];
+			expRoundKeys[i][3][0] = t[3] ^ key.key[3][0];
+			expRoundKeys[i][0][1] = expRoundKeys[i][0][0] ^ key.key[0][1];
+			expRoundKeys[i][1][1] = expRoundKeys[i][1][0] ^ key.key[1][1];
+			expRoundKeys[i][2][1] = expRoundKeys[i][2][0] ^ key.key[2][1];
+			expRoundKeys[i][3][1] = expRoundKeys[i][3][0] ^ key.key[3][1];
+			expRoundKeys[i][0][2] = expRoundKeys[i][0][1] ^ key.key[0][2];
+			expRoundKeys[i][1][2] = expRoundKeys[i][1][1] ^ key.key[1][2];
+			expRoundKeys[i][2][2] = expRoundKeys[i][2][1] ^ key.key[2][2];
+			expRoundKeys[i][3][2] = expRoundKeys[i][3][1] ^ key.key[3][2];
+			expRoundKeys[i][0][3] = expRoundKeys[i][0][2] ^ key.key[0][3];
+			expRoundKeys[i][1][3] = expRoundKeys[i][1][2] ^ key.key[1][3];
+			expRoundKeys[i][2][3] = expRoundKeys[i][2][2] ^ key.key[2][3];
+			expRoundKeys[i][3][3] = expRoundKeys[i][3][2] ^ key.key[3][3];
+		}
+		else {
+			t[0] = sbox[expRoundKeys[i - 1][3][3]] ^ rCon[i];
+			t[1] = sbox[expRoundKeys[i - 1][0][3]] ^ rCon[i];
+			t[2] = sbox[expRoundKeys[i - 1][1][3]] ^ rCon[i];
+			t[3] = sbox[expRoundKeys[i - 1][2][3]] ^ rCon[i];
+
+			expRoundKeys[i][0][0] = t[0] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][1][0] = t[1] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][2][0] = t[2] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][3][0] = t[3] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][0][1] = expRoundKeys[i][0][0] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][1][1] = expRoundKeys[i][1][0] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][2][1] = expRoundKeys[i][2][0] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][3][1] = expRoundKeys[i][3][0] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][0][2] = expRoundKeys[i][0][1] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][1][2] = expRoundKeys[i][1][1] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][2][2] = expRoundKeys[i][2][1] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][3][2] = expRoundKeys[i][3][1] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][0][3] = expRoundKeys[i][0][2] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][1][3] = expRoundKeys[i][1][2] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][2][3] = expRoundKeys[i][2][2] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][3][3] = expRoundKeys[i][3][2] ^ expRoundKeys[i][0][0];
+		}
+	}
 }
 
 //Organizes the steps for encryption and decryption - ARM
