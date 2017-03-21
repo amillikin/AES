@@ -377,34 +377,59 @@ stateStruct addRoundKey(stateStruct state, int keyRound) {
 void keygen() {
 	unsigned int t[4] = { 0 };
 
-	for (int i = 1; i <= 11; i++) {
-		t[0] = sbox[expRoundKeys[i - 1][1][3]] ^ rCon[i];
-		t[1] = sbox[expRoundKeys[i - 1][2][3]];
-		t[2] = sbox[expRoundKeys[i - 1][3][3]];
-		t[3] = sbox[expRoundKeys[i - 1][0][3]];
+	for (int i = 0; i <= 11; i++) {
+		if (i == 0) {
+			t[0] = sbox[expRoundKeys[0][1][3]] ^ rCon[i];
+			t[1] = sbox[expRoundKeys[0][2][3]];
+			t[2] = sbox[expRoundKeys[0][3][3]];
+			t[3] = sbox[expRoundKeys[0][0][3]];
 
-		expRoundKeys[i][0][0] = t[0] ^ expRoundKeys[i-1][0][0];
-		expRoundKeys[i][1][0] = t[1] ^ expRoundKeys[i-1][1][0];
-		expRoundKeys[i][2][0] = t[2] ^ expRoundKeys[i-1][2][0];
-		expRoundKeys[i][3][0] = t[3] ^ expRoundKeys[i-1][3][0];
-		expRoundKeys[i][0][1] = expRoundKeys[i][0][0] ^ expRoundKeys[i-1][0][1];
-		expRoundKeys[i][1][1] = expRoundKeys[i][1][0] ^ expRoundKeys[i-1][1][1];
-		expRoundKeys[i][2][1] = expRoundKeys[i][2][0] ^ expRoundKeys[i-1][2][1];
-		expRoundKeys[i][3][1] = expRoundKeys[i][3][0] ^ expRoundKeys[i-1][3][1];
-		expRoundKeys[i][0][2] = expRoundKeys[i][0][1] ^ expRoundKeys[i-1][0][2];
-		expRoundKeys[i][1][2] = expRoundKeys[i][1][1] ^ expRoundKeys[i-1][1][2];
-		expRoundKeys[i][2][2] = expRoundKeys[i][2][1] ^ expRoundKeys[i-1][2][2];
-		expRoundKeys[i][3][2] = expRoundKeys[i][3][1] ^ expRoundKeys[i-1][3][2];
-		expRoundKeys[i][0][3] = expRoundKeys[i][0][2] ^ expRoundKeys[i-1][0][3];
-		expRoundKeys[i][1][3] = expRoundKeys[i][1][2] ^ expRoundKeys[i-1][1][3];
-		expRoundKeys[i][2][3] = expRoundKeys[i][2][2] ^ expRoundKeys[i-1][2][3];
-		expRoundKeys[i][3][3] = expRoundKeys[i][3][2] ^ expRoundKeys[i - 1][3][3];
+			expRoundKeys[i][0][0] = t[0] ^ expRoundKeys[0][0][0];
+			expRoundKeys[i][1][0] = t[1] ^ expRoundKeys[0][1][0];
+			expRoundKeys[i][2][0] = t[2] ^ expRoundKeys[0][2][0];
+			expRoundKeys[i][3][0] = t[3] ^ expRoundKeys[0][3][0];
+			expRoundKeys[i][0][1] = expRoundKeys[i][0][0] ^ expRoundKeys[0][0][1];
+			expRoundKeys[i][1][1] = expRoundKeys[i][1][0] ^ expRoundKeys[0][1][1];
+			expRoundKeys[i][2][1] = expRoundKeys[i][2][0] ^ expRoundKeys[0][2][1];
+			expRoundKeys[i][3][1] = expRoundKeys[i][3][0] ^ expRoundKeys[0][3][1];
+			expRoundKeys[i][0][2] = expRoundKeys[i][0][1] ^ expRoundKeys[0][0][2];
+			expRoundKeys[i][1][2] = expRoundKeys[i][1][1] ^ expRoundKeys[0][1][2];
+			expRoundKeys[i][2][2] = expRoundKeys[i][2][1] ^ expRoundKeys[0][2][2];
+			expRoundKeys[i][3][2] = expRoundKeys[i][3][1] ^ expRoundKeys[0][3][2];
+			expRoundKeys[i][0][3] = expRoundKeys[i][0][2] ^ expRoundKeys[0][0][3];
+			expRoundKeys[i][1][3] = expRoundKeys[i][1][2] ^ expRoundKeys[0][1][3];
+			expRoundKeys[i][2][3] = expRoundKeys[i][2][2] ^ expRoundKeys[0][2][3];
+			expRoundKeys[i][3][3] = expRoundKeys[i][3][2] ^ expRoundKeys[0][3][3];
+		}
+		else {
+			t[0] = sbox[expRoundKeys[i - 1][1][3]] ^ rCon[i];
+			t[1] = sbox[expRoundKeys[i - 1][2][3]];
+			t[2] = sbox[expRoundKeys[i - 1][3][3]];
+			t[3] = sbox[expRoundKeys[i - 1][0][3]];
+
+			expRoundKeys[i][0][0] = t[0] ^ expRoundKeys[i-1][0][0];
+			expRoundKeys[i][1][0] = t[1] ^ expRoundKeys[i-1][1][0];
+			expRoundKeys[i][2][0] = t[2] ^ expRoundKeys[i-1][2][0];
+			expRoundKeys[i][3][0] = t[3] ^ expRoundKeys[i-1][3][0];
+			expRoundKeys[i][0][1] = expRoundKeys[i][0][0] ^ expRoundKeys[i-1][0][1];
+			expRoundKeys[i][1][1] = expRoundKeys[i][1][0] ^ expRoundKeys[i-1][1][1];
+			expRoundKeys[i][2][1] = expRoundKeys[i][2][0] ^ expRoundKeys[i-1][2][1];
+			expRoundKeys[i][3][1] = expRoundKeys[i][3][0] ^ expRoundKeys[i-1][3][1];
+			expRoundKeys[i][0][2] = expRoundKeys[i][0][1] ^ expRoundKeys[i-1][0][2];
+			expRoundKeys[i][1][2] = expRoundKeys[i][1][1] ^ expRoundKeys[i-1][1][2];
+			expRoundKeys[i][2][2] = expRoundKeys[i][2][1] ^ expRoundKeys[i-1][2][2];
+			expRoundKeys[i][3][2] = expRoundKeys[i][3][1] ^ expRoundKeys[i-1][3][2];
+			expRoundKeys[i][0][3] = expRoundKeys[i][0][2] ^ expRoundKeys[i-1][0][3];
+			expRoundKeys[i][1][3] = expRoundKeys[i][1][2] ^ expRoundKeys[i-1][1][3];
+			expRoundKeys[i][2][3] = expRoundKeys[i][2][2] ^ expRoundKeys[i-1][2][3];
+			expRoundKeys[i][3][3] = expRoundKeys[i][3][2] ^ expRoundKeys[i-1][3][3];
+		}
 	}
 }
 
 //Organizes the steps for encryption and decryption - ARM
 stateStruct aes(stateStruct state, string actionType) {
-		if (actionType == "E") {
+		if (actionType == "E") 
 			state = addRoundKey(state, 0);
 			for (int i = 1; i < 11; i++) {
 				state = subBytes(state);
@@ -416,7 +441,7 @@ stateStruct aes(stateStruct state, string actionType) {
 			state = shiftRows(state);
 			state = addRoundKey(state, 11);
 		}
-		else if(actionType == "D") {
+		else if(actionType == "D") 
 			state = addRoundKey(state, 11);
 			for (int i = 10; i > 0; i--) {
 				state = invShiftRows(state);
