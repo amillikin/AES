@@ -208,7 +208,7 @@ const unsigned int rCon[10]{
 	b2 = 14a0 + 9a1 + 13a2 + 11a3
 	b3 = 11a0 + 14a1 + 9a2 + 13a3
 */
-void invMixColumns(stateStruct state) {
+stateStruct invMixColumns(stateStruct state) {
 	memcpy(state.curState, state.tempState, sizeof(state.curState));
 
 	state.curState[0][0] = gfMult13[state.tempState[0][0]] ^ gfMult11[state.tempState[1][0]] ^ gfMult14[state.tempState[2][0]] ^ gfMult9[state.tempState[3][0]];
@@ -230,6 +230,8 @@ void invMixColumns(stateStruct state) {
 	state.curState[1][3] = gfMult9[state.tempState[0][3]] ^ gfMult13[state.tempState[1][3]] ^ gfMult11[state.tempState[2][3]] ^ gfMult14[state.tempState[3][3]];
 	state.curState[2][3] = gfMult14[state.tempState[0][3]] ^ gfMult9[state.tempState[1][3]] ^ gfMult13[state.tempState[2][3]] ^ gfMult11[state.tempState[3][3]];
 	state.curState[3][3] = gfMult11[state.tempState[0][3]] ^ gfMult14[state.tempState[1][3]] ^ gfMult9[state.tempState[2][3]] ^ gfMult13[state.tempState[3][3]];
+
+	return state;
 }
 
 /*	
@@ -243,7 +245,7 @@ void invMixColumns(stateStruct state) {
 	b2 = 1a0 + 1a1 + 2a2 + 3a3
 	b3 = 3a0 + 1a1 + 1a2 + 2a3
 */
-void mixColumns(stateStruct state) {
+stateStruct mixColumns(stateStruct state) {
 	memcpy(state.curState, state.tempState, sizeof(state.curState));
 
 	state.curState[0][0] = gfMult2[state.tempState[0][0]] ^ gfMult3[state.tempState[1][0]] ^ state.tempState[2][0] ^ state.tempState[3][0];
@@ -266,12 +268,13 @@ void mixColumns(stateStruct state) {
 	state.curState[2][3] = state.tempState[0][3] ^ state.tempState[1][3] ^ gfMult2[state.tempState[2][3]] ^ gfMult3[state.tempState[3][3]];
 	state.curState[3][3] = gfMult3[state.tempState[0][3]] ^ state.tempState[1][3] ^ state.tempState[2][3] ^ gfMult2[state.tempState[3][3]];
 
+	return state;
 }
 
 // Shifts each row left by the value of the row index.
 // i.e. Row 0 rotated right 0, Row 1 rotated right 1, 
 //		Row 2 rotated right 2, Row 3 rotated right 3.
-void invShiftRows(stateStruct state) {
+stateStruct invShiftRows(stateStruct state) {
 	memcpy(state.curState, state.tempState, sizeof(state.curState));
 
 	state.curState[1][0] = state.tempState[1][3];
@@ -286,12 +289,13 @@ void invShiftRows(stateStruct state) {
 	state.curState[3][1] = state.tempState[3][2];
 	state.curState[3][2] = state.tempState[3][3];
 	state.curState[3][3] = state.tempState[3][0];
+	return state;
 }
 
 // Shifts each row left by the value of the row index.
 // i.e. Row 0 rotated left 0, Row 1 rotated left 1, 
 //		Row 2 rotated left 2, Row 3 rotated left 3.
-void shiftRows(stateStruct state) {
+stateStruct shiftRows(stateStruct state) {
 	memcpy(state.curState, state.tempState, sizeof(state.curState));
 
 	state.curState[1][0] = state.tempState[1][1];
@@ -306,10 +310,11 @@ void shiftRows(stateStruct state) {
 	state.curState[3][1] = state.tempState[3][0];
 	state.curState[3][2] = state.tempState[3][1];
 	state.curState[3][3] = state.tempState[3][2];
+	return state;
 }
  
 // Uses the respective byte as an index with invSBox lookup table to get new value.
-void invSubBytes(stateStruct state) {
+stateStruct invSubBytes(stateStruct state) {
 	state.curState[0][0] = invsbox[state.curState[0][0]];
 	state.curState[1][0] = invsbox[state.curState[1][0]];
 	state.curState[2][0] = invsbox[state.curState[2][0]];
@@ -326,10 +331,11 @@ void invSubBytes(stateStruct state) {
 	state.curState[1][3] = invsbox[state.curState[1][3]];
 	state.curState[2][3] = invsbox[state.curState[2][3]];
 	state.curState[3][3] = invsbox[state.curState[3][3]];
+	return state;
 }
 
 // Uses the respective byte as an index with sBox lookup table to get new value.
-void subBytes(stateStruct state) {
+stateStruct subBytes(stateStruct state) {
 	state.curState[0][0] = sbox[state.curState[0][0]];
 	state.curState[1][0] = sbox[state.curState[1][0]];
 	state.curState[2][0] = sbox[state.curState[2][0]];
@@ -346,11 +352,12 @@ void subBytes(stateStruct state) {
 	state.curState[1][3] = sbox[state.curState[1][3]];
 	state.curState[2][3] = sbox[state.curState[2][3]];
 	state.curState[3][3] = sbox[state.curState[3][3]];
+	return state;
 }
 
 // XORs each byte in the current state with 
 // the respective byte in the current round key.
-void addRoundKey(stateStruct state, int keyRound) {
+stateStruct addRoundKey(stateStruct state, int keyRound) {
 	state.curState[0][0] ^= expRoundKeys[keyRound][0][0];
 	state.curState[1][0] ^= expRoundKeys[keyRound][1][0];
 	state.curState[2][0] ^= expRoundKeys[keyRound][2][0];
@@ -367,6 +374,7 @@ void addRoundKey(stateStruct state, int keyRound) {
 	state.curState[1][3] ^= expRoundKeys[keyRound][1][3];
 	state.curState[2][3] ^= expRoundKeys[keyRound][2][3];
 	state.curState[3][3] ^= expRoundKeys[keyRound][3][3];
+	return state;
 }
 
 //Creates all 10 round keys - ARM
@@ -374,11 +382,11 @@ void keygen(keyStruct key) {
 	unsigned int t[4] = { 0 };
 
 	for (int i = 0; i <= 10; i++) {
-		if (i = 0) {
-			t[0] = sbox[key.key[3][3]] ^ rCon[i];
-			t[1] = sbox[key.key[0][3]] ^ rCon[i];
-			t[2] = sbox[key.key[1][3]] ^ rCon[i];
-			t[3] = sbox[key.key[2][3]] ^ rCon[i];
+		if (i == 0) {
+			t[0] = sbox[key.key[1][3]] ^ rCon[i];
+			t[1] = sbox[key.key[2][3]];
+			t[2] = sbox[key.key[3][3]];
+			t[3] = sbox[key.key[0][3]];
 
 			expRoundKeys[i][0][0] = t[0] ^ key.key[0][0];
 			expRoundKeys[i][1][0] = t[1] ^ key.key[1][0];
@@ -398,27 +406,27 @@ void keygen(keyStruct key) {
 			expRoundKeys[i][3][3] = expRoundKeys[i][3][2] ^ key.key[3][3];
 		}
 		else {
-			t[0] = sbox[expRoundKeys[i - 1][3][3]] ^ rCon[i];
-			t[1] = sbox[expRoundKeys[i - 1][0][3]] ^ rCon[i];
-			t[2] = sbox[expRoundKeys[i - 1][1][3]] ^ rCon[i];
-			t[3] = sbox[expRoundKeys[i - 1][2][3]] ^ rCon[i];
+			t[0] = sbox[expRoundKeys[i - 1][1][3]] ^ rCon[i];
+			t[1] = sbox[expRoundKeys[i - 1][2][3]];
+			t[2] = sbox[expRoundKeys[i - 1][3][3]];
+			t[3] = sbox[expRoundKeys[i - 1][0][3]];
 
-			expRoundKeys[i][0][0] = t[0] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][1][0] = t[1] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][2][0] = t[2] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][3][0] = t[3] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][0][1] = expRoundKeys[i][0][0] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][1][1] = expRoundKeys[i][1][0] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][2][1] = expRoundKeys[i][2][0] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][3][1] = expRoundKeys[i][3][0] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][0][2] = expRoundKeys[i][0][1] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][1][2] = expRoundKeys[i][1][1] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][2][2] = expRoundKeys[i][2][1] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][3][2] = expRoundKeys[i][3][1] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][0][3] = expRoundKeys[i][0][2] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][1][3] = expRoundKeys[i][1][2] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][2][3] = expRoundKeys[i][2][2] ^ expRoundKeys[i][0][0];
-			expRoundKeys[i][3][3] = expRoundKeys[i][3][2] ^ expRoundKeys[i][0][0];
+			expRoundKeys[i][0][0] = t[0] ^ expRoundKeys[i-1][0][0];
+			expRoundKeys[i][1][0] = t[1] ^ expRoundKeys[i-1][1][0];
+			expRoundKeys[i][2][0] = t[2] ^ expRoundKeys[i-1][2][0];
+			expRoundKeys[i][3][0] = t[3] ^ expRoundKeys[i-1][3][0];
+			expRoundKeys[i][0][1] = expRoundKeys[i][0][0] ^ expRoundKeys[i-1][0][1];
+			expRoundKeys[i][1][1] = expRoundKeys[i][1][0] ^ expRoundKeys[i-1][1][1];
+			expRoundKeys[i][2][1] = expRoundKeys[i][2][0] ^ expRoundKeys[i-1][2][1];
+			expRoundKeys[i][3][1] = expRoundKeys[i][3][0] ^ expRoundKeys[i-1][3][1];
+			expRoundKeys[i][0][2] = expRoundKeys[i][0][1] ^ expRoundKeys[i-1][0][2];
+			expRoundKeys[i][1][2] = expRoundKeys[i][1][1] ^ expRoundKeys[i-1][1][2];
+			expRoundKeys[i][2][2] = expRoundKeys[i][2][1] ^ expRoundKeys[i-1][2][2];
+			expRoundKeys[i][3][2] = expRoundKeys[i][3][1] ^ expRoundKeys[i-1][3][2];
+			expRoundKeys[i][0][3] = expRoundKeys[i][0][2] ^ expRoundKeys[i-1][0][3];
+			expRoundKeys[i][1][3] = expRoundKeys[i][1][2] ^ expRoundKeys[i-1][1][3];
+			expRoundKeys[i][2][3] = expRoundKeys[i][2][2] ^ expRoundKeys[i-1][2][3];
+			expRoundKeys[i][3][3] = expRoundKeys[i][3][2] ^ expRoundKeys[i-1][3][3];
 		}
 	}
 }
@@ -427,29 +435,29 @@ void keygen(keyStruct key) {
 stateStruct aes(stateStruct state, string actionType) {
 		if (actionType == "E") {
 			int i = 1;
-			addRoundKey(state, 0);
+			state = addRoundKey(state, 0);
 			for (i; i < 10; i++) {
-				subBytes(state);
-				shiftRows(state);
-				mixColumns(state);
-				addRoundKey(state, i);
+				state = subBytes(state);
+				state = shiftRows(state);
+				state = mixColumns(state);
+				state = addRoundKey(state, i);
 			}
-			subBytes(state);
-			shiftRows(state);
-			addRoundKey(state, i);
+			state = subBytes(state);
+			state = shiftRows(state);
+			state = addRoundKey(state, i);
 		}
 		else if(actionType == "D") {
 			int i = 9;
-			addRoundKey(state, 10);
+			state = addRoundKey(state, 10);
 			for (i; i > 0; i--) {
-				invShiftRows(state);
-				invSubBytes(state);
-				addRoundKey(state, i);
-				invMixColumns(state);
+				state = invShiftRows(state);
+				state = invSubBytes(state);
+				state = addRoundKey(state, i);
+				state = invMixColumns(state);
 			}
-			invShiftRows(state);
-			invSubBytes(state);
-			addRoundKey(state, i);
+			state = invShiftRows(state);
+			state = invSubBytes(state);
+			state = addRoundKey(state, i);
 		}
 
 	return state;
@@ -539,6 +547,41 @@ int main(int argc, char* argv[]) {
 	errno_t err;
 	stateStruct state;
 	keyStruct newKey;
+
+	newKey.key[0][0] = 0x2b;
+	newKey.key[1][0] = 0x7e;
+	newKey.key[2][0] = 0x15;
+	newKey.key[3][0] = 0x16;
+	newKey.key[0][1] = 0x28;
+	newKey.key[1][1] = 0xae;
+	newKey.key[2][1] = 0xd2;
+	newKey.key[3][1] = 0xa6;
+	newKey.key[0][2] = 0xab;
+	newKey.key[1][2] = 0xf7;
+	newKey.key[2][2] = 0x15;
+	newKey.key[3][2] = 0x88;
+	newKey.key[0][3] = 0x09;
+	newKey.key[1][3] = 0xcf;
+	newKey.key[2][3] = 0x4f;
+	newKey.key[3][3] = 0x3c;
+	state.curState[0][0] = 0x32;
+	state.curState[1][0] = 0x43;
+	state.curState[2][0] = 0xf6;
+	state.curState[3][0] = 0xa8;
+	state.curState[0][1] = 0x88;
+	state.curState[1][1] = 0x5a;
+	state.curState[2][1] = 0x30;
+	state.curState[3][1] = 0x8d;
+	state.curState[0][2] = 0x31;
+	state.curState[1][2] = 0x31;
+	state.curState[2][2] = 0x98;
+	state.curState[3][2] = 0xa2;
+	state.curState[0][3] = 0xe0;
+	state.curState[1][3] = 0x37;
+	state.curState[2][3] = 0x07;
+	state.curState[3][3] = 0x34;
+	keygen(newKey);
+	aes(state, "E");
 
 	if (argc != 6) {
 		cout << "Incorrect number of arguments supplied." << endl;
