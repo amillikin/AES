@@ -197,32 +197,32 @@ const unsigned int rCon[10]{
 	using the respective lookup tables instead of performing the actual calculation.
 	Lookup tables values are selected using the byte value as the index.
 
-	b0 = 13a0 + 11a1 + 14a2 + 9a3
-	b1 = 9a0 + 13a1 + 11a2 + 14a3
-	b2 = 14a0 + 9a1 + 13a2 + 11a3
-	b3 = 11a0 + 14a1 + 9a2 + 13a3
+	b0 = 14a0 + 11a1 + 13a2 + 9a3
+	b1 = 9a0 + 14a1 + 11a2 + 13a3
+	b2 = 13a0 + 9a1 + 14a2 + 11a3
+	b3 = 11a0 + 13a1 + 9a2 + 14a3
 */
 stateStruct invMixColumns(stateStruct state, stateStruct tempState) {
 
-	state.curState[0][0] = gfMult13[tempState.curState[0][0]] ^ gfMult11[tempState.curState[1][0]] ^ gfMult14[tempState.curState[2][0]] ^ gfMult9[tempState.curState[3][0]];
-	state.curState[1][0] = gfMult9[tempState.curState[0][0]] ^ gfMult13[tempState.curState[1][0]] ^ gfMult11[tempState.curState[2][0]] ^ gfMult14[tempState.curState[3][0]];
-	state.curState[2][0] = gfMult14[tempState.curState[0][0]] ^ gfMult9[tempState.curState[1][0]] ^ gfMult13[tempState.curState[2][0]] ^ gfMult11[tempState.curState[3][0]];
-	state.curState[3][0] = gfMult11[tempState.curState[0][0]] ^ gfMult14[tempState.curState[1][0]] ^ gfMult9[tempState.curState[2][0]] ^ gfMult13[tempState.curState[3][0]];
+	state.curState[0][0] = gfMult14[tempState.curState[0][0]] ^ gfMult11[tempState.curState[1][0]] ^ gfMult13[tempState.curState[2][0]] ^ gfMult9[tempState.curState[3][0]];
+	state.curState[1][0] = gfMult9[tempState.curState[0][0]] ^ gfMult14[tempState.curState[1][0]] ^ gfMult11[tempState.curState[2][0]] ^ gfMult13[tempState.curState[3][0]];
+	state.curState[2][0] = gfMult13[tempState.curState[0][0]] ^ gfMult9[tempState.curState[1][0]] ^ gfMult14[tempState.curState[2][0]] ^ gfMult11[tempState.curState[3][0]];
+	state.curState[3][0] = gfMult11[tempState.curState[0][0]] ^ gfMult13[tempState.curState[1][0]] ^ gfMult9[tempState.curState[2][0]] ^ gfMult14[tempState.curState[3][0]];
 
-	state.curState[0][1] = gfMult13[tempState.curState[0][1]] ^ gfMult11[tempState.curState[1][1]] ^ gfMult14[tempState.curState[2][1]] ^ gfMult9[tempState.curState[3][1]];
-	state.curState[1][1] = gfMult9[tempState.curState[0][1]] ^ gfMult13[tempState.curState[1][1]] ^ gfMult11[tempState.curState[2][1]] ^ gfMult14[tempState.curState[3][1]];
-	state.curState[2][1] = gfMult14[tempState.curState[0][1]] ^ gfMult9[tempState.curState[1][1]] ^ gfMult13[tempState.curState[2][1]] ^ gfMult11[tempState.curState[3][1]];
-	state.curState[3][1] = gfMult11[tempState.curState[0][1]] ^ gfMult14[tempState.curState[1][1]] ^ gfMult9[tempState.curState[2][1]] ^ gfMult13[tempState.curState[3][1]];
+	state.curState[0][1] = gfMult14[tempState.curState[0][1]] ^ gfMult11[tempState.curState[1][1]] ^ gfMult13[tempState.curState[2][1]] ^ gfMult9[tempState.curState[3][1]];
+	state.curState[1][1] = gfMult9[tempState.curState[0][1]] ^ gfMult14[tempState.curState[1][1]] ^ gfMult11[tempState.curState[2][1]] ^ gfMult13[tempState.curState[3][1]];
+	state.curState[2][1] = gfMult13[tempState.curState[0][1]] ^ gfMult9[tempState.curState[1][1]] ^ gfMult14[tempState.curState[2][1]] ^ gfMult11[tempState.curState[3][1]];
+	state.curState[3][1] = gfMult11[tempState.curState[0][1]] ^ gfMult13[tempState.curState[1][1]] ^ gfMult9[tempState.curState[2][1]] ^ gfMult14[tempState.curState[3][1]];
 
-	state.curState[0][2] = gfMult13[tempState.curState[0][2]] ^ gfMult11[tempState.curState[1][2]] ^ gfMult14[tempState.curState[2][2]] ^ gfMult9[tempState.curState[3][2]];
-	state.curState[1][2] = gfMult9[tempState.curState[0][2]] ^ gfMult13[tempState.curState[1][2]] ^ gfMult11[tempState.curState[2][2]] ^ gfMult14[tempState.curState[3][2]];
-	state.curState[2][2] = gfMult14[tempState.curState[0][2]] ^ gfMult9[tempState.curState[1][2]] ^ gfMult13[tempState.curState[2][2]] ^ gfMult11[tempState.curState[3][2]];
-	state.curState[3][2] = gfMult11[tempState.curState[0][2]] ^ gfMult14[tempState.curState[1][2]] ^ gfMult9[tempState.curState[2][2]] ^ gfMult13[tempState.curState[3][2]];
+	state.curState[0][2] = gfMult14[tempState.curState[0][2]] ^ gfMult11[tempState.curState[1][2]] ^ gfMult13[tempState.curState[2][2]] ^ gfMult9[tempState.curState[3][2]];
+	state.curState[1][2] = gfMult9[tempState.curState[0][2]] ^ gfMult14[tempState.curState[1][2]] ^ gfMult11[tempState.curState[2][2]] ^ gfMult13[tempState.curState[3][2]];
+	state.curState[2][2] = gfMult13[tempState.curState[0][2]] ^ gfMult9[tempState.curState[1][2]] ^ gfMult14[tempState.curState[2][2]] ^ gfMult11[tempState.curState[3][2]];
+	state.curState[3][2] = gfMult11[tempState.curState[0][2]] ^ gfMult13[tempState.curState[1][2]] ^ gfMult9[tempState.curState[2][2]] ^ gfMult14[tempState.curState[3][2]];
 
-	state.curState[0][3] = gfMult13[tempState.curState[0][3]] ^ gfMult11[tempState.curState[1][3]] ^ gfMult14[tempState.curState[2][3]] ^ gfMult9[tempState.curState[3][3]];
-	state.curState[1][3] = gfMult9[tempState.curState[0][3]] ^ gfMult13[tempState.curState[1][3]] ^ gfMult11[tempState.curState[2][3]] ^ gfMult14[tempState.curState[3][3]];
-	state.curState[2][3] = gfMult14[tempState.curState[0][3]] ^ gfMult9[tempState.curState[1][3]] ^ gfMult13[tempState.curState[2][3]] ^ gfMult11[tempState.curState[3][3]];
-	state.curState[3][3] = gfMult11[tempState.curState[0][3]] ^ gfMult14[tempState.curState[1][3]] ^ gfMult9[tempState.curState[2][3]] ^ gfMult13[tempState.curState[3][3]];
+	state.curState[0][3] = gfMult14[tempState.curState[0][3]] ^ gfMult11[tempState.curState[1][3]] ^ gfMult13[tempState.curState[2][3]] ^ gfMult9[tempState.curState[3][3]];
+	state.curState[1][3] = gfMult9[tempState.curState[0][3]] ^ gfMult14[tempState.curState[1][3]] ^ gfMult11[tempState.curState[2][3]] ^ gfMult13[tempState.curState[3][3]];
+	state.curState[2][3] = gfMult13[tempState.curState[0][3]] ^ gfMult9[tempState.curState[1][3]] ^ gfMult14[tempState.curState[2][3]] ^ gfMult11[tempState.curState[3][3]];
+	state.curState[3][3] = gfMult11[tempState.curState[0][3]] ^ gfMult13[tempState.curState[1][3]] ^ gfMult9[tempState.curState[2][3]] ^ gfMult14[tempState.curState[3][3]];
 
 	return state;
 }
