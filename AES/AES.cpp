@@ -438,22 +438,22 @@ bool validMode(string mode) {
 }
 
 //Returns type of key used: 1) Hex, 2) 16-char (no space) 3) 16-char (with spaces). Else 0 if not valid. - ARM
-int getKeyType(string strIn) {
+void getKeyType(string strIn) {
 	if (strIn.length() == 32) {
 		for (int i = 0; i < 32; i++) {
 			if (!isxdigit(strIn[i])) {
 				cout << "Not a valid key. Must be 32 hex digits or 16 characters" << endl;
-				return 0;
+				keyType = 0;
 			}
 		}
-		return 1;
+		keyType = 1;
 	}
 	else if (strIn.length() == 18 && strIn.substr(0, 1) == "'" && strIn.substr(17, 1) == "'") {
-		return 2;
+		keyType = 2;
 	}
 	else {
 		cout << "Not a valid key. Must be 32 hex digits or 16 characters" << endl;
-		return 0;
+		keyType = 0;
 	}
 }
 
@@ -504,62 +504,11 @@ void prompt()
 int main(int argc, char* argv[]) {
 	clock_t startTime = clock(), endTime;
 	double secondsElapsed;
-	string action, mode, keyStr;
+	string action, mode, keyStr, keyByte;
 	streampos begF, endF;
 	int bytesLeft, size, shiftAmt, writeSize;
 	errno_t err;
 	stateStruct state;
-
-	expRoundKeys[0][0][0] = 0x2b;
-	expRoundKeys[0][1][0] = 0x7e;
-	expRoundKeys[0][2][0] = 0x15;
-	expRoundKeys[0][3][0] = 0x16;
-	expRoundKeys[0][0][1] = 0x28;
-	expRoundKeys[0][1][1] = 0xae;
-	expRoundKeys[0][2][1] = 0xd2;
-	expRoundKeys[0][3][1] = 0xa6;
-	expRoundKeys[0][0][2] = 0xab;
-	expRoundKeys[0][1][2] = 0xf7;
-	expRoundKeys[0][2][2] = 0x15;
-	expRoundKeys[0][3][2] = 0x88;
-	expRoundKeys[0][0][3] = 0x09;
-	expRoundKeys[0][1][3] = 0xcf;
-	expRoundKeys[0][2][3] = 0x4f;
-	expRoundKeys[0][3][3] = 0x3c;
-	//state.curState[0][0] = 0x32;
-	//state.curState[1][0] = 0x43;
-	//state.curState[2][0] = 0xf6;
-	//state.curState[3][0] = 0xa8;
-	//state.curState[0][1] = 0x88;
-	//state.curState[1][1] = 0x5a;
-	//state.curState[2][1] = 0x30;
-	//state.curState[3][1] = 0x8d;
-	//state.curState[0][2] = 0x31;
-	//state.curState[1][2] = 0x31;
-	//state.curState[2][2] = 0x98;
-	//state.curState[3][2] = 0xa2;
-	//state.curState[0][3] = 0xe0;
-	//state.curState[1][3] = 0x37;
-	//state.curState[2][3] = 0x07;
-	//state.curState[3][3] = 0x34;
-	state.curState[0][0] = 0x39;
-	state.curState[1][0] = 0x25;
-	state.curState[2][0] = 0x84;
-	state.curState[3][0] = 0x1d;
-	state.curState[0][1] = 0x02;
-	state.curState[1][1] = 0xdc;
-	state.curState[2][1] = 0x09;
-	state.curState[3][1] = 0xfb;
-	state.curState[0][2] = 0xdc;
-	state.curState[1][2] = 0x11;
-	state.curState[2][2] = 0x85;
-	state.curState[3][2] = 0x97;
-	state.curState[0][3] = 0x19;
-	state.curState[1][3] = 0x6a;
-	state.curState[2][3] = 0x0b;
-	state.curState[3][3] = 0x32;
-	keygen();
-	aes(state, "D");
 
 	if (argc != 6) {
 		cout << "Incorrect number of arguments supplied." << endl;
@@ -575,41 +524,77 @@ int main(int argc, char* argv[]) {
 
 	action = action.substr(1, 1);
 	keyStr = argv[2];
-	if (getKeyType(keyStr) == 2) {
-		expRoundKeys[0][0][0] = (unsigned int)keyStr[0];
-		expRoundKeys[0][1][0] = (unsigned int)keyStr[1];
-		expRoundKeys[0][2][0] = (unsigned int)keyStr[2];
-		expRoundKeys[0][3][0] = (unsigned int)keyStr[3];
-		expRoundKeys[0][0][1] = (unsigned int)keyStr[4];
-		expRoundKeys[0][1][1] = (unsigned int)keyStr[5];
-		expRoundKeys[0][2][1] = (unsigned int)keyStr[6];
-		expRoundKeys[0][3][1] = (unsigned int)keyStr[7];
-		expRoundKeys[0][0][2] = (unsigned int)keyStr[8];
-		expRoundKeys[0][1][2] = (unsigned int)keyStr[9];
-		expRoundKeys[0][2][2] = (unsigned int)keyStr[10];
-		expRoundKeys[0][3][2] = (unsigned int)keyStr[11];
-		expRoundKeys[0][0][3] = (unsigned int)keyStr[12];
-		expRoundKeys[0][1][3] = (unsigned int)keyStr[13];
-		expRoundKeys[0][2][3] = (unsigned int)keyStr[14];
-		expRoundKeys[0][3][3] = (unsigned int)keyStr[15];
+	getKeyType(keyStr);
+	if (keyType == 2) {
+		expRoundKeys[0][0][0] = (unsigned int)keyStr[1];
+		expRoundKeys[0][1][0] = (unsigned int)keyStr[2];
+		expRoundKeys[0][2][0] = (unsigned int)keyStr[3];
+		expRoundKeys[0][3][0] = (unsigned int)keyStr[4];
+		expRoundKeys[0][0][1] = (unsigned int)keyStr[5];
+		expRoundKeys[0][1][1] = (unsigned int)keyStr[6];
+		expRoundKeys[0][2][1] = (unsigned int)keyStr[7];
+		expRoundKeys[0][3][1] = (unsigned int)keyStr[8];
+		expRoundKeys[0][0][2] = (unsigned int)keyStr[9];
+		expRoundKeys[0][1][2] = (unsigned int)keyStr[10];
+		expRoundKeys[0][2][2] = (unsigned int)keyStr[11];
+		expRoundKeys[0][3][2] = (unsigned int)keyStr[12];
+		expRoundKeys[0][0][3] = (unsigned int)keyStr[13];
+		expRoundKeys[0][1][3] = (unsigned int)keyStr[14];
+		expRoundKeys[0][2][3] = (unsigned int)keyStr[15];
+		expRoundKeys[0][3][3] = (unsigned int)keyStr[16];
+	}
+	else if (keyType == 1) {
+		keyByte = keyStr[0];
+		keyByte += keyStr[1];
+		expRoundKeys[0][0][0] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[2];
+		keyByte += keyStr[3];
+		expRoundKeys[0][1][0] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[4];
+		keyByte += keyStr[5];
+		expRoundKeys[0][2][0] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[6];
+		keyByte += keyStr[7];
+		expRoundKeys[0][3][0] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[8];
+		keyByte += keyStr[9];
+		expRoundKeys[0][0][1] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[10];
+		keyByte += keyStr[11];
+		expRoundKeys[0][1][1] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[12];
+		keyByte += keyStr[13];
+		expRoundKeys[0][2][1] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[14];
+		keyByte += keyStr[15];
+		expRoundKeys[0][3][1] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[16];
+		keyByte += keyStr[17];
+		expRoundKeys[0][0][2] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[18];
+		keyByte += keyStr[19];
+		expRoundKeys[0][1][2] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[20];
+		keyByte += keyStr[21];
+		expRoundKeys[0][2][2] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[22];
+		keyByte += keyStr[23];
+		expRoundKeys[0][3][2] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[24];
+		keyByte += keyStr[25];
+		expRoundKeys[0][0][3] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[26];
+		keyByte += keyStr[27];
+		expRoundKeys[0][1][3] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[28];
+		keyByte += keyStr[29];
+		expRoundKeys[0][2][3] = stoul(keyByte, NULL, 16);
+		keyByte = keyStr[30];
+		keyByte += keyStr[31];
+		expRoundKeys[0][3][3] = stoul(keyByte, NULL, 16);
 	}
 	else {
-		expRoundKeys[0][0][0] = (((unsigned int)keyStr[0] << 4) | (unsigned int)keyStr[1]);
-		expRoundKeys[0][1][0] = (((unsigned int)keyStr[2] << 4) | (unsigned int)keyStr[3]);
-		expRoundKeys[0][2][0] = (((unsigned int)keyStr[4] << 4) | (unsigned int)keyStr[5]);
-		expRoundKeys[0][3][0] = (((unsigned int)keyStr[6] << 4) | (unsigned int)keyStr[7]);
-		expRoundKeys[0][0][1] = (((unsigned int)keyStr[8] << 4) | (unsigned int)keyStr[9]);
-		expRoundKeys[0][1][1] = (((unsigned int)keyStr[10] << 4) | (unsigned int)keyStr[11]);
-		expRoundKeys[0][2][1] = (((unsigned int)keyStr[12] << 4) | (unsigned int)keyStr[13]);
-		expRoundKeys[0][3][1] = (((unsigned int)keyStr[14] << 4) | (unsigned int)keyStr[15]);
-		expRoundKeys[0][0][2] = (((unsigned int)keyStr[16] << 4) | (unsigned int)keyStr[17]);
-		expRoundKeys[0][1][2] = (((unsigned int)keyStr[18] << 4) | (unsigned int)keyStr[19]);
-		expRoundKeys[0][2][2] = (((unsigned int)keyStr[20] << 4) | (unsigned int)keyStr[21]);
-		expRoundKeys[0][3][2] = (((unsigned int)keyStr[22] << 4) | (unsigned int)keyStr[23]);
-		expRoundKeys[0][0][3] = (((unsigned int)keyStr[24] << 4) | (unsigned int)keyStr[25]);
-		expRoundKeys[0][1][3] = (((unsigned int)keyStr[26] << 4) | (unsigned int)keyStr[27]);
-		expRoundKeys[0][2][3] = (((unsigned int)keyStr[28] << 4) | (unsigned int)keyStr[29]);
-		expRoundKeys[0][3][3] = (((unsigned int)keyStr[30] << 4) | (unsigned int)keyStr[31]);
+		return 1;
 	}
 
 	mode = upCase(argv[3]);
@@ -654,8 +639,8 @@ int main(int argc, char* argv[]) {
 	*/
 	state.curState[4][4] = {0};
 	writeSize = 8;
-	//keygen(newKey);
-	/*
+	keygen();
+	
 	if (action == "E") {
 		//Encrypting size block. Pad size with 32 random bytes.
 		//If CBC, first block is iv set to 64 random bits. XOR plaintext with IV.
@@ -784,7 +769,6 @@ int main(int argc, char* argv[]) {
 		block = _byteswap_uint64(block);
 		fwrite(reinterpret_cast<char*>(&block), 1, writeSize, outStream);
 	}
-	*/
 END:
 	fclose(inStream);
 	fclose(outStream);
