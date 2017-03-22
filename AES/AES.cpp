@@ -1,10 +1,10 @@
 /********************************************************************************************
-*										DES.cpp 											*
+*										AES.cpp 											*
 *																							*
-*	DESCRIPTION: A DES encrypter and descripter that accepts filesizes up to 31-bytes.		*
-*				 Input Parameters: DES <-action> <key> <mode> <infile> <outfile>.			*
+*	DESCRIPTION: An AES encrypter and descripter that accepts filesizes up to 31-bytes.		*
+*				 Input Parameters: AES <-action> <key> <mode> <infile> <outfile>.			*
 *				 Accepted Actions: "-E" (encrypt), "-D" (decrypt)							*
-*				 Accepted Keys: 16-Bit Hex string, 8-bit Char string						*
+*				 Accepted Keys: 32 Hex Digit string, 16 Character string							*
 *				 Accepted Modes: EBC, CBC													*
 *																							*
 *																							*
@@ -442,7 +442,7 @@ int getKeyType(string strIn) {
 	if (strIn.length() == 32) {
 		for (int i = 0; i < 32; i++) {
 			if (!isxdigit(strIn[i])) {
-				cout << "Not a valid key. Must be 32-bit hex or 16-char" << endl;
+				cout << "Not a valid key. Must be 32 hex digits or 16 characters" << endl;
 				return 0;
 			}
 		}
@@ -452,7 +452,7 @@ int getKeyType(string strIn) {
 		return 2;
 	}
 	else {
-		cout << "Not a valid key. Must be 32-bit hex or 16-char" << endl;
+		cout << "Not a valid key. Must be 32 hex digits or 16 characters" << endl;
 		return 0;
 	}
 }
