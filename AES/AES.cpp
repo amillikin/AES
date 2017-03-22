@@ -30,8 +30,6 @@ FILE *inStream, *outStream;
 
 struct stateStruct {
 	unsigned int curState[4][4];
-	unsigned int prevState[4][4];
-	unsigned int tempState[4][4];
 };
 
 //Lookup Tables for Galois Field Multiplication (2, 3, 9, 11, 13, 14) used in mixColumns
@@ -204,28 +202,27 @@ const unsigned int rCon[10]{
 	b2 = 14a0 + 9a1 + 13a2 + 11a3
 	b3 = 11a0 + 14a1 + 9a2 + 13a3
 */
-stateStruct invMixColumns(stateStruct state) {
-	memcpy(state.curState, state.tempState, sizeof(state.curState));
+stateStruct invMixColumns(stateStruct state, stateStruct tempState) {
 
-	state.curState[0][0] = gfMult13[state.tempState[0][0]] ^ gfMult11[state.tempState[1][0]] ^ gfMult14[state.tempState[2][0]] ^ gfMult9[state.tempState[3][0]];
-	state.curState[1][0] = gfMult9[state.tempState[0][0]] ^ gfMult13[state.tempState[1][0]] ^ gfMult11[state.tempState[2][0]] ^ gfMult14[state.tempState[3][0]];
-	state.curState[2][0] = gfMult14[state.tempState[0][0]] ^ gfMult9[state.tempState[1][0]] ^ gfMult13[state.tempState[2][0]] ^ gfMult11[state.tempState[3][0]];
-	state.curState[3][0] = gfMult11[state.tempState[0][0]] ^ gfMult14[state.tempState[1][0]] ^ gfMult9[state.tempState[2][0]] ^ gfMult13[state.tempState[3][0]];
+	state.curState[0][0] = gfMult13[tempState.curState[0][0]] ^ gfMult11[tempState.curState[1][0]] ^ gfMult14[tempState.curState[2][0]] ^ gfMult9[tempState.curState[3][0]];
+	state.curState[1][0] = gfMult9[tempState.curState[0][0]] ^ gfMult13[tempState.curState[1][0]] ^ gfMult11[tempState.curState[2][0]] ^ gfMult14[tempState.curState[3][0]];
+	state.curState[2][0] = gfMult14[tempState.curState[0][0]] ^ gfMult9[tempState.curState[1][0]] ^ gfMult13[tempState.curState[2][0]] ^ gfMult11[tempState.curState[3][0]];
+	state.curState[3][0] = gfMult11[tempState.curState[0][0]] ^ gfMult14[tempState.curState[1][0]] ^ gfMult9[tempState.curState[2][0]] ^ gfMult13[tempState.curState[3][0]];
 
-	state.curState[0][1] = gfMult13[state.tempState[0][1]] ^ gfMult11[state.tempState[1][1]] ^ gfMult14[state.tempState[2][1]] ^ gfMult9[state.tempState[3][1]];
-	state.curState[1][1] = gfMult9[state.tempState[0][1]] ^ gfMult13[state.tempState[1][1]] ^ gfMult11[state.tempState[2][1]] ^ gfMult14[state.tempState[3][1]];
-	state.curState[2][1] = gfMult14[state.tempState[0][1]] ^ gfMult9[state.tempState[1][1]] ^ gfMult13[state.tempState[2][1]] ^ gfMult11[state.tempState[3][1]];
-	state.curState[3][1] = gfMult11[state.tempState[0][1]] ^ gfMult14[state.tempState[1][1]] ^ gfMult9[state.tempState[2][1]] ^ gfMult13[state.tempState[3][1]];
+	state.curState[0][1] = gfMult13[tempState.curState[0][1]] ^ gfMult11[tempState.curState[1][1]] ^ gfMult14[tempState.curState[2][1]] ^ gfMult9[tempState.curState[3][1]];
+	state.curState[1][1] = gfMult9[tempState.curState[0][1]] ^ gfMult13[tempState.curState[1][1]] ^ gfMult11[tempState.curState[2][1]] ^ gfMult14[tempState.curState[3][1]];
+	state.curState[2][1] = gfMult14[tempState.curState[0][1]] ^ gfMult9[tempState.curState[1][1]] ^ gfMult13[tempState.curState[2][1]] ^ gfMult11[tempState.curState[3][1]];
+	state.curState[3][1] = gfMult11[tempState.curState[0][1]] ^ gfMult14[tempState.curState[1][1]] ^ gfMult9[tempState.curState[2][1]] ^ gfMult13[tempState.curState[3][1]];
 
-	state.curState[0][2] = gfMult13[state.tempState[0][2]] ^ gfMult11[state.tempState[1][2]] ^ gfMult14[state.tempState[2][2]] ^ gfMult9[state.tempState[3][2]];
-	state.curState[1][2] = gfMult9[state.tempState[0][2]] ^ gfMult13[state.tempState[1][2]] ^ gfMult11[state.tempState[2][2]] ^ gfMult14[state.tempState[3][2]];
-	state.curState[2][2] = gfMult14[state.tempState[0][2]] ^ gfMult9[state.tempState[1][2]] ^ gfMult13[state.tempState[2][2]] ^ gfMult11[state.tempState[3][2]];
-	state.curState[3][2] = gfMult11[state.tempState[0][2]] ^ gfMult14[state.tempState[1][2]] ^ gfMult9[state.tempState[2][2]] ^ gfMult13[state.tempState[3][2]];
+	state.curState[0][2] = gfMult13[tempState.curState[0][2]] ^ gfMult11[tempState.curState[1][2]] ^ gfMult14[tempState.curState[2][2]] ^ gfMult9[tempState.curState[3][2]];
+	state.curState[1][2] = gfMult9[tempState.curState[0][2]] ^ gfMult13[tempState.curState[1][2]] ^ gfMult11[tempState.curState[2][2]] ^ gfMult14[tempState.curState[3][2]];
+	state.curState[2][2] = gfMult14[tempState.curState[0][2]] ^ gfMult9[tempState.curState[1][2]] ^ gfMult13[tempState.curState[2][2]] ^ gfMult11[tempState.curState[3][2]];
+	state.curState[3][2] = gfMult11[tempState.curState[0][2]] ^ gfMult14[tempState.curState[1][2]] ^ gfMult9[tempState.curState[2][2]] ^ gfMult13[tempState.curState[3][2]];
 
-	state.curState[0][3] = gfMult13[state.tempState[0][3]] ^ gfMult11[state.tempState[1][3]] ^ gfMult14[state.tempState[2][3]] ^ gfMult9[state.tempState[3][3]];
-	state.curState[1][3] = gfMult9[state.tempState[0][3]] ^ gfMult13[state.tempState[1][3]] ^ gfMult11[state.tempState[2][3]] ^ gfMult14[state.tempState[3][3]];
-	state.curState[2][3] = gfMult14[state.tempState[0][3]] ^ gfMult9[state.tempState[1][3]] ^ gfMult13[state.tempState[2][3]] ^ gfMult11[state.tempState[3][3]];
-	state.curState[3][3] = gfMult11[state.tempState[0][3]] ^ gfMult14[state.tempState[1][3]] ^ gfMult9[state.tempState[2][3]] ^ gfMult13[state.tempState[3][3]];
+	state.curState[0][3] = gfMult13[tempState.curState[0][3]] ^ gfMult11[tempState.curState[1][3]] ^ gfMult14[tempState.curState[2][3]] ^ gfMult9[tempState.curState[3][3]];
+	state.curState[1][3] = gfMult9[tempState.curState[0][3]] ^ gfMult13[tempState.curState[1][3]] ^ gfMult11[tempState.curState[2][3]] ^ gfMult14[tempState.curState[3][3]];
+	state.curState[2][3] = gfMult14[tempState.curState[0][3]] ^ gfMult9[tempState.curState[1][3]] ^ gfMult13[tempState.curState[2][3]] ^ gfMult11[tempState.curState[3][3]];
+	state.curState[3][3] = gfMult11[tempState.curState[0][3]] ^ gfMult14[tempState.curState[1][3]] ^ gfMult9[tempState.curState[2][3]] ^ gfMult13[tempState.curState[3][3]];
 
 	return state;
 }
@@ -241,28 +238,27 @@ stateStruct invMixColumns(stateStruct state) {
 	b2 = 1a0 + 1a1 + 2a2 + 3a3
 	b3 = 3a0 + 1a1 + 1a2 + 2a3
 */
-stateStruct mixColumns(stateStruct state) {
-	memcpy(state.curState, state.tempState, sizeof(state.curState));
+stateStruct mixColumns(stateStruct state, stateStruct tempState) {
 
-	state.curState[0][0] = gfMult2[state.tempState[0][0]] ^ gfMult3[state.tempState[1][0]] ^ state.tempState[2][0] ^ state.tempState[3][0];
-	state.curState[1][0] = state.tempState[0][0] ^ gfMult2[state.tempState[1][0]] ^ gfMult3[state.tempState[2][0]] ^ state.tempState[3][0];
-	state.curState[2][0] = state.tempState[0][0] ^ state.tempState[1][0] ^ gfMult2[state.tempState[2][0]] ^ gfMult3[state.tempState[3][0]];
-	state.curState[3][0] = gfMult3[state.tempState[0][0]] ^ state.tempState[1][0] ^ state.tempState[2][0] ^ gfMult2[state.tempState[3][0]];
+	state.curState[0][0] = gfMult2[tempState.curState[0][0]] ^ gfMult3[tempState.curState[1][0]] ^ tempState.curState[2][0] ^ tempState.curState[3][0];
+	state.curState[1][0] = tempState.curState[0][0] ^ gfMult2[tempState.curState[1][0]] ^ gfMult3[tempState.curState[2][0]] ^ tempState.curState[3][0];
+	state.curState[2][0] = tempState.curState[0][0] ^ tempState.curState[1][0] ^ gfMult2[tempState.curState[2][0]] ^ gfMult3[tempState.curState[3][0]];
+	state.curState[3][0] = gfMult3[tempState.curState[0][0]] ^ tempState.curState[1][0] ^ tempState.curState[2][0] ^ gfMult2[tempState.curState[3][0]];
 
-	state.curState[0][1] = gfMult2[state.tempState[0][1]] ^ gfMult3[state.tempState[1][1]] ^ state.tempState[2][1] ^ state.tempState[3][1];
-	state.curState[1][1] = state.tempState[0][1] ^ gfMult2[state.tempState[1][1]] ^ gfMult3[state.tempState[2][1]] ^ state.tempState[3][1];
-	state.curState[2][1] = state.tempState[0][1] ^ state.tempState[1][1] ^ gfMult2[state.tempState[2][1]] ^ gfMult3[state.tempState[3][1]];
-	state.curState[3][1] = gfMult3[state.tempState[0][1]] ^ state.tempState[1][1] ^ state.tempState[2][1] ^ gfMult2[state.tempState[3][1]];
+	state.curState[0][1] = gfMult2[tempState.curState[0][1]] ^ gfMult3[tempState.curState[1][1]] ^ tempState.curState[2][1] ^ tempState.curState[3][1];
+	state.curState[1][1] = tempState.curState[0][1] ^ gfMult2[tempState.curState[1][1]] ^ gfMult3[tempState.curState[2][1]] ^ tempState.curState[3][1];
+	state.curState[2][1] = tempState.curState[0][1] ^ tempState.curState[1][1] ^ gfMult2[tempState.curState[2][1]] ^ gfMult3[tempState.curState[3][1]];
+	state.curState[3][1] = gfMult3[tempState.curState[0][1]] ^ tempState.curState[1][1] ^ tempState.curState[2][1] ^ gfMult2[tempState.curState[3][1]];
 
-	state.curState[0][2] = gfMult2[state.tempState[0][2]] ^ gfMult3[state.tempState[1][2]] ^ state.tempState[2][2] ^ state.tempState[3][2];
-	state.curState[1][2] = state.tempState[0][2] ^ gfMult2[state.tempState[1][2]] ^ gfMult3[state.tempState[2][2]] ^ state.tempState[3][2];
-	state.curState[2][2] = state.tempState[0][2] ^ state.tempState[1][2] ^ gfMult2[state.tempState[2][2]] ^ gfMult3[state.tempState[3][2]];
-	state.curState[3][2] = gfMult3[state.tempState[0][2]] ^ state.tempState[1][2] ^ state.tempState[2][2] ^ gfMult2[state.tempState[3][2]];
+	state.curState[0][2] = gfMult2[tempState.curState[0][2]] ^ gfMult3[tempState.curState[1][2]] ^ tempState.curState[2][2] ^ tempState.curState[3][2];
+	state.curState[1][2] = tempState.curState[0][2] ^ gfMult2[tempState.curState[1][2]] ^ gfMult3[tempState.curState[2][2]] ^ tempState.curState[3][2];
+	state.curState[2][2] = tempState.curState[0][2] ^ tempState.curState[1][2] ^ gfMult2[tempState.curState[2][2]] ^ gfMult3[tempState.curState[3][2]];
+	state.curState[3][2] = gfMult3[tempState.curState[0][2]] ^ tempState.curState[1][2] ^ tempState.curState[2][2] ^ gfMult2[tempState.curState[3][2]];
 
-	state.curState[0][3] = gfMult2[state.tempState[0][3]] ^ gfMult3[state.tempState[1][3]] ^ state.tempState[2][3] ^ state.tempState[3][3];
-	state.curState[1][3] = state.tempState[0][3] ^ gfMult2[state.tempState[1][3]] ^ gfMult3[state.tempState[2][3]] ^ state.tempState[3][3];
-	state.curState[2][3] = state.tempState[0][3] ^ state.tempState[1][3] ^ gfMult2[state.tempState[2][3]] ^ gfMult3[state.tempState[3][3]];
-	state.curState[3][3] = gfMult3[state.tempState[0][3]] ^ state.tempState[1][3] ^ state.tempState[2][3] ^ gfMult2[state.tempState[3][3]];
+	state.curState[0][3] = gfMult2[tempState.curState[0][3]] ^ gfMult3[tempState.curState[1][3]] ^ tempState.curState[2][3] ^ tempState.curState[3][3];
+	state.curState[1][3] = tempState.curState[0][3] ^ gfMult2[tempState.curState[1][3]] ^ gfMult3[tempState.curState[2][3]] ^ tempState.curState[3][3];
+	state.curState[2][3] = tempState.curState[0][3] ^ tempState.curState[1][3] ^ gfMult2[tempState.curState[2][3]] ^ gfMult3[tempState.curState[3][3]];
+	state.curState[3][3] = gfMult3[tempState.curState[0][3]] ^ tempState.curState[1][3] ^ tempState.curState[2][3] ^ gfMult2[tempState.curState[3][3]];
 
 	return state;
 }
@@ -270,42 +266,40 @@ stateStruct mixColumns(stateStruct state) {
 // Shifts each row left by the value of the row index.
 // i.e. Row 0 rotated right 0, Row 1 rotated right 1, 
 //		Row 2 rotated right 2, Row 3 rotated right 3.
-stateStruct invShiftRows(stateStruct state) {
-	memcpy(state.curState, state.tempState, sizeof(state.curState));
+stateStruct invShiftRows(stateStruct state, stateStruct tempState) {
 
-	state.curState[1][0] = state.tempState[1][3];
-	state.curState[1][1] = state.tempState[1][0];
-	state.curState[1][2] = state.tempState[1][1];
-	state.curState[1][3] = state.tempState[1][2];
-	state.curState[2][0] = state.tempState[2][2];
-	state.curState[2][1] = state.tempState[2][3];
-	state.curState[2][2] = state.tempState[2][0];
-	state.curState[2][3] = state.tempState[2][1];
-	state.curState[3][0] = state.tempState[3][1];
-	state.curState[3][1] = state.tempState[3][2];
-	state.curState[3][2] = state.tempState[3][3];
-	state.curState[3][3] = state.tempState[3][0];
+	state.curState[1][0] = tempState.curState[1][3];
+	state.curState[1][1] = tempState.curState[1][0];
+	state.curState[1][2] = tempState.curState[1][1];
+	state.curState[1][3] = tempState.curState[1][2];
+	state.curState[2][0] = tempState.curState[2][2];
+	state.curState[2][1] = tempState.curState[2][3];
+	state.curState[2][2] = tempState.curState[2][0];
+	state.curState[2][3] = tempState.curState[2][1];
+	state.curState[3][0] = tempState.curState[3][1];
+	state.curState[3][1] = tempState.curState[3][2];
+	state.curState[3][2] = tempState.curState[3][3];
+	state.curState[3][3] = tempState.curState[3][0];
 	return state;
 }
 
 // Shifts each row left by the value of the row index.
 // i.e. Row 0 rotated left 0, Row 1 rotated left 1, 
 //		Row 2 rotated left 2, Row 3 rotated left 3.
-stateStruct shiftRows(stateStruct state) {
-	memcpy(state.curState, state.tempState, sizeof(state.curState));
+stateStruct shiftRows(stateStruct state, stateStruct tempState) {
 
-	state.curState[1][0] = state.tempState[1][1];
-	state.curState[1][1] = state.tempState[1][2];
-	state.curState[1][2] = state.tempState[1][3];
-	state.curState[1][3] = state.tempState[1][0];
-	state.curState[2][0] = state.tempState[2][2];
-	state.curState[2][1] = state.tempState[2][3];
-	state.curState[2][2] = state.tempState[2][0];
-	state.curState[2][3] = state.tempState[2][1];
-	state.curState[3][0] = state.tempState[3][3];
-	state.curState[3][1] = state.tempState[3][0];
-	state.curState[3][2] = state.tempState[3][1];
-	state.curState[3][3] = state.tempState[3][2];
+	state.curState[1][0] = tempState.curState[1][1];
+	state.curState[1][1] = tempState.curState[1][2];
+	state.curState[1][2] = tempState.curState[1][3];
+	state.curState[1][3] = tempState.curState[1][0];
+	state.curState[2][0] = tempState.curState[2][2];
+	state.curState[2][1] = tempState.curState[2][3];
+	state.curState[2][2] = tempState.curState[2][0];
+	state.curState[2][3] = tempState.curState[2][1];
+	state.curState[3][0] = tempState.curState[3][3];
+	state.curState[3][1] = tempState.curState[3][0];
+	state.curState[3][2] = tempState.curState[3][1];
+	state.curState[3][3] = tempState.curState[3][2];
 	return state;
 }
  
@@ -377,8 +371,8 @@ stateStruct addRoundKey(stateStruct state, int keyRound) {
 void keygen() {
 	unsigned int t[4] = { 0 };
 
-	for (int i = 1; i <= 11; i++) {
-		t[0] = sbox[expRoundKeys[i - 1][1][3]] ^ rCon[i];
+	for (int i = 1; i <= 10; i++) {
+		t[0] = sbox[expRoundKeys[i - 1][1][3]] ^ rCon[i-1];
 		t[1] = sbox[expRoundKeys[i - 1][2][3]];
 		t[2] = sbox[expRoundKeys[i - 1][3][3]];
 		t[3] = sbox[expRoundKeys[i - 1][0][3]];
@@ -398,7 +392,7 @@ void keygen() {
 		expRoundKeys[i][0][3] = expRoundKeys[i][0][2] ^ expRoundKeys[i-1][0][3];
 		expRoundKeys[i][1][3] = expRoundKeys[i][1][2] ^ expRoundKeys[i-1][1][3];
 		expRoundKeys[i][2][3] = expRoundKeys[i][2][2] ^ expRoundKeys[i-1][2][3];
-		expRoundKeys[i][3][3] = expRoundKeys[i][3][2] ^ expRoundKeys[i - 1][3][3];
+		expRoundKeys[i][3][3] = expRoundKeys[i][3][2] ^ expRoundKeys[i-1][3][3];
 	}
 }
 
@@ -406,25 +400,25 @@ void keygen() {
 stateStruct aes(stateStruct state, string actionType) {
 		if (actionType == "E") {
 			state = addRoundKey(state, 0);
-			for (int i = 1; i < 11; i++) {
+			for (int i = 1; i < 10; i++) {
 				state = subBytes(state);
-				state = shiftRows(state);
-				state = mixColumns(state);
+				state = shiftRows(state, state);
+				state = mixColumns(state, state);
 				state = addRoundKey(state, i);
 			}
 			state = subBytes(state);
-			state = shiftRows(state);
-			state = addRoundKey(state, 11);
+			state = shiftRows(state, state);
+			state = addRoundKey(state, 10);
 		}
 		else if(actionType == "D") {
-			state = addRoundKey(state, 11);
-			for (int i = 10; i > 0; i--) {
-				state = invShiftRows(state);
+			state = addRoundKey(state, 10);
+			for (int i = 9; i > 0; i--) {
+				state = invShiftRows(state, state);
 				state = invSubBytes(state);
 				state = addRoundKey(state, i);
-				state = invMixColumns(state);
+				state = invMixColumns(state, state);
 			}
-			state = invShiftRows(state);
+			state = invShiftRows(state, state);
 			state = invSubBytes(state);
 			state = addRoundKey(state, 0);
 		}
@@ -532,24 +526,40 @@ int main(int argc, char* argv[]) {
 	expRoundKeys[0][1][3] = 0xcf;
 	expRoundKeys[0][2][3] = 0x4f;
 	expRoundKeys[0][3][3] = 0x3c;
-	state.curState[0][0] = 0x32;
-	state.curState[1][0] = 0x43;
-	state.curState[2][0] = 0xf6;
-	state.curState[3][0] = 0xa8;
-	state.curState[0][1] = 0x88;
-	state.curState[1][1] = 0x5a;
-	state.curState[2][1] = 0x30;
-	state.curState[3][1] = 0x8d;
-	state.curState[0][2] = 0x31;
-	state.curState[1][2] = 0x31;
-	state.curState[2][2] = 0x98;
-	state.curState[3][2] = 0xa2;
-	state.curState[0][3] = 0xe0;
-	state.curState[1][3] = 0x37;
-	state.curState[2][3] = 0x07;
-	state.curState[3][3] = 0x34;
+	//state.curState[0][0] = 0x32;
+	//state.curState[1][0] = 0x43;
+	//state.curState[2][0] = 0xf6;
+	//state.curState[3][0] = 0xa8;
+	//state.curState[0][1] = 0x88;
+	//state.curState[1][1] = 0x5a;
+	//state.curState[2][1] = 0x30;
+	//state.curState[3][1] = 0x8d;
+	//state.curState[0][2] = 0x31;
+	//state.curState[1][2] = 0x31;
+	//state.curState[2][2] = 0x98;
+	//state.curState[3][2] = 0xa2;
+	//state.curState[0][3] = 0xe0;
+	//state.curState[1][3] = 0x37;
+	//state.curState[2][3] = 0x07;
+	//state.curState[3][3] = 0x34;
+	state.curState[0][0] = 0x39;
+	state.curState[1][0] = 0x25;
+	state.curState[2][0] = 0x84;
+	state.curState[3][0] = 0x1d;
+	state.curState[0][1] = 0x02;
+	state.curState[1][1] = 0xdc;
+	state.curState[2][1] = 0x09;
+	state.curState[3][1] = 0xfb;
+	state.curState[0][2] = 0xdc;
+	state.curState[1][2] = 0x11;
+	state.curState[2][2] = 0x85;
+	state.curState[3][2] = 0x97;
+	state.curState[0][3] = 0x19;
+	state.curState[1][3] = 0x6a;
+	state.curState[2][3] = 0x0b;
+	state.curState[3][3] = 0x32;
 	keygen();
-	aes(state, "E");
+	aes(state, "D");
 
 	if (argc != 6) {
 		cout << "Incorrect number of arguments supplied." << endl;
