@@ -4,11 +4,11 @@
 *	DESCRIPTION: An AES encrypter and descripter that accepts filesizes up to 31-bytes.		*
 *				 Input Parameters: AES <-action> <key> <mode> <infile> <outfile>.			*
 *				 Accepted Actions: "-E" (encrypt), "-D" (decrypt)							*
-*				 Accepted Keys: 32 Hex Digit string, 16 Character string							*
+*				 Accepted Keys: 32 Hex Digit string, 16 Character string					*
 *				 Accepted Modes: EBC, CBC													*
 *																							*
 *																							*
-*	AUTHOR: Aaron Millikin											START DATE: 2/7/2017	*
+*	AUTHOR: Aaron Millikin											START DATE: 3/16/2017	*
 *********************************************************************************************/
 
 #include "stdafx.h"
@@ -26,7 +26,8 @@ using namespace std;
 typedef unsigned long long ull;
 int keyType;
 unsigned int expRoundKeys[11][4][4];
-FILE *inStream, *outStream;
+ifstream inFile;
+ofstream outFile;
 
 struct stateStruct {
 	unsigned int curState[4][4];
@@ -426,6 +427,70 @@ stateStruct aes(stateStruct state, string actionType) {
 	return state;
 }
 
+//XORs two states
+stateStruct xorState(stateStruct state1, stateStruct state2) {
+	state1.curState[0][0] ^= state2.curState[0][0];
+	state1.curState[1][0] ^= state2.curState[0][0];
+	state1.curState[2][0] ^= state2.curState[0][0];
+	state1.curState[3][0] ^= state2.curState[0][0];
+	state1.curState[0][1] ^= state2.curState[0][0];
+	state1.curState[1][1] ^= state2.curState[0][0];
+	state1.curState[2][1] ^= state2.curState[0][0];
+	state1.curState[3][1] ^= state2.curState[0][0];
+	state1.curState[0][2] ^= state2.curState[0][0];
+	state1.curState[1][2] ^= state2.curState[0][0];
+	state1.curState[2][2] ^= state2.curState[0][0];
+	state1.curState[3][2] ^= state2.curState[0][0];
+	state1.curState[0][3] ^= state2.curState[0][0];
+	state1.curState[1][3] ^= state2.curState[0][0];
+	state1.curState[2][3] ^= state2.curState[0][0];
+	state1.curState[3][3] ^= state2.curState[0][0];
+
+	return state1;
+}
+
+stateStruct readState(){
+	stateStruct state;
+	fread_s(reinterpret_cast<char*>(state.curState[0][0]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[1][0]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[2][0]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[3][0]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[0][1]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[1][1]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[2][1]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[3][1]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[0][2]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[1][2]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[2][2]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[3][2]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[0][3]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[1][3]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[2][3]), 1, 1, 1, inStream);
+	fread_s(reinterpret_cast<char*>(state.curState[3][3]), 1, 1, 1, inStream);
+
+	return state;
+}
+
+//Writes a state to the outfile
+void writeState(stateStruct state) {
+	fwrite(state.curState[0][0], 1, 1, outStream);
+	fwrite(state.curState[1][0], 1, 1, outStream);
+	fwrite(state.curState[2][0], 1, 1, outStream);
+	fwrite(state.curState[3][0], 1, 1, outStream);
+	fwrite(state.curState[0][1], 1, 1, outStream);
+	fwrite(state.curState[1][1], 1, 1, outStream);
+	fwrite(state.curState[2][1], 1, 1, outStream);
+	fwrite(state.curState[3][1], 1, 1, outStream);
+	fwrite(state.curState[0][2], 1, 1, outStream);
+	fwrite(state.curState[1][2], 1, 1, outStream);
+	fwrite(state.curState[2][2], 1, 1, outStream);
+	fwrite(state.curState[3][2], 1, 1, outStream);
+	fwrite(state.curState[0][3], 1, 1, outStream);
+	fwrite(state.curState[1][3], 1, 1, outStream);
+	fwrite(state.curState[2][3], 1, 1, outStream);
+	fwrite(state.curState[3][3], 1, 1, outStream);
+}
+
 //Checks valid mode - ARM
 bool validMode(string mode) {
 	if (mode == "ECB" || mode == "CBC") {
@@ -478,8 +543,8 @@ ull getHexfBytes(size_t bytesLeft) {
 	return hexBytes;
 }
 
-//Creates Random Pad Bits
-ull getRandBits(int numToPad) {
+//Creates Random Pad Bytes
+ull getRandBytes(int numToPad) {
 	ull randBytes = 0;
 	srand((unsigned int)time(NULL));
 	for (int i = 0; i < numToPad; i++) {
@@ -507,8 +572,11 @@ int main(int argc, char* argv[]) {
 	string action, mode, keyStr, keyByte;
 	streampos begF, endF;
 	int bytesLeft, size, shiftAmt, writeSize;
+	unsigned int byte;
 	errno_t err;
-	stateStruct state;
+	stateStruct state, iv, tempIV;
+	ull block;
+	streampos begin, end;
 
 	if (argc != 6) {
 		cout << "Incorrect number of arguments supplied." << endl;
@@ -603,24 +671,27 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	err = fopen_s(&inStream, argv[4], "rb");
-	if (!(err == 0)) {
+	inFile.open(argv[4], ios::in | ios::binary);
+	if (!inFile) {
 		cout << "Can't open input file " << argv[4] << endl;
 		prompt();
 		return 1;
 	}
 
-	err = fopen_s(&outStream, argv[5], "wb");
-	if (!(err == 0)) {
+	outFile.open(argv[5], ios::out);
+	if (!outFile) {
 		cout << "Can't open output file " << argv[5] << endl;
 		prompt();
 		return 1;
 	}
 
 	//	Determines length of file. - ARM
-	fseek(inStream, 0, SEEK_END);
-	size = ftell(inStream);
-	rewind(inStream);
+	begin = inFile.tellg();
+	inFile.seekg(0, ios::end);
+	end = inFile.tellg();
+	size = (end - begin);
+	inFile.seekg(0, ios::beg);
+
 
 	//	Filesize limit of 31 bits. - ARM
 	if (size > 2147483647) {
@@ -644,56 +715,82 @@ int main(int argc, char* argv[]) {
 	if (action == "E") {
 		//Encrypting size block. Pad size with 32 random bytes.
 		//If CBC, first block is iv set to 64 random bits. XOR plaintext with IV.
-		//		  Then write encrypted iv to outfile. Next iv = size block ciphertext.
+		//Then write encrypted iv to outfile. Next iv = size block ciphertext.
 
-		 = size;
-		block = ((getRandBits(32) << 32) | size);
+		state.curState[0][0] = getRandBytes(1);
+		state.curState[1][0] = getRandBytes(1);
+		state.curState[2][0] = getRandBytes(1);
+		state.curState[3][0] = getRandBytes(1);
+		state.curState[0][1] = getRandBytes(1);
+		state.curState[1][1] = getRandBytes(1);
+		state.curState[2][1] = getRandBytes(1);
+		state.curState[3][1] = getRandBytes(1);
+		state.curState[0][2] = getRandBytes(1);
+		state.curState[1][2] = getRandBytes(1);
+		state.curState[2][2] = getRandBytes(1);
+		state.curState[3][2] = getRandBytes(1);
+		state.curState[0][3] = ((size & 0xff000000) >> 24);
+		state.curState[1][3] = ((size & 0x00ff0000) >> 16);
+		state.curState[2][3] = ((size & 0x0000ff00) >> 8);
+		state.curState[3][3] = (size & 0x000000ff);
 
 		if (mode == "CBC") {
-			iv = getRandBits(64);
-			block ^= iv;
-			iv = aes(state, action);
-			iv = _byteswap_uint64(iv);
-			fwrite(reinterpret_cast<char*>(&iv), 1, 8, outStream);
+			iv.curState[0][0] = getRandBytes(1);
+			iv.curState[1][0] = getRandBytes(1);
+			iv.curState[2][0] = getRandBytes(1);
+			iv.curState[3][0] = getRandBytes(1);
+			iv.curState[0][1] = getRandBytes(1);
+			iv.curState[1][1] = getRandBytes(1);
+			iv.curState[2][1] = getRandBytes(1);
+			iv.curState[3][1] = getRandBytes(1);
+			iv.curState[0][2] = getRandBytes(1);
+			iv.curState[1][2] = getRandBytes(1);
+			iv.curState[2][2] = getRandBytes(1);
+			iv.curState[3][2] = getRandBytes(1);
+			iv.curState[0][3] = getRandBytes(1);
+			iv.curState[1][3] = getRandBytes(1);
+			iv.curState[2][3] = getRandBytes(1);
+			iv.curState[3][3] = getRandBytes(1);
+
+			state = xorState(state, iv);
+			iv = aes(iv, action);
+			writeState(iv);
 		}
 
 		state = aes(state, action);
 
 		if (mode == "CBC") {
-			iv = block;
+			iv = state;
 		}
 
-		block = _byteswap_uint64(block);
-		fwrite(reinterpret_cast<char*>(&block), 1, 8, outStream);
-		bytesLeft = (size % 8);
+		fwrite(reinterpret_cast<char*>(&block), 1, 1, outStream);
+		bytesLeft = (size % 16);
 	}
 	else {
 		//Decrypting. If CBC, read first block -> decrypt = IV. Then read size block.
-		//			  Else, just read size block.
+		//Else, just read size block.
 		if (mode == "CBC") {
 			fread_s(reinterpret_cast<char*>(&iv), 8, 1, 8, inStream);
-			iv = _byteswap_uint64(iv);
-			iv = des(iv, action);
+			iv = aes(iv, action);
 		}
 
-		fread_s(reinterpret_cast<char*>(&block), 8, 1, 8, inStream);
-		block = _byteswap_uint64(block);
+		fread_s(reinterpret_cast<char*>(&block), 1, 1, 1, inStream);
 
 		//If CBC, next round's iv = ciphertext block
 		if (mode == "CBC") {
-			tempIV = block;
+			tempIV = state;
 		}
 
-		block = des(block, action);
+		state = aes(state, action);
 
 		//If CBC, xor block with iv.
 		if (mode == "CBC") {
-			block ^= iv;
+			state = xorState(state, iv);
 			iv = tempIV;
-			bytesLeft = ((size - 16) - (block & 0xffffffff));
+			//bytesLeft = ((size - 16) - (block & 0xffffffff));
 		}
 		else {
-			bytesLeft = ((size - 8) - (block & 0xffffffff));
+			//bytesLeft = ((size - 8) - (block & 0xffffffff));
 		}
 	};
 
@@ -701,74 +798,70 @@ int main(int argc, char* argv[]) {
 	// If filesize is less than 8 bytes, only read that amount, padding appropriately before passing through DES.
 	// Guaranteed to be encrpytion if this is true because an encrypted file being decrypted would have at least 9 bytes.
 	if (size < 8) {
-		fread_s(reinterpret_cast<char*>(&block), bytesLeft, 1, bytesLeft, inStream);
-		block = _byteswap_uint64(block);
-		block = (((block & getHexfBytes(bytesLeft)) << (8 - bytesLeft)) | (getRandBits(8 - bytesLeft)));
+		//fread_s(reinterpret_cast<char*>(&block), bytesLeft, 1, bytesLeft, inStream
+		//block = (((block & getHexfBytes(bytesLeft)) << (8 - bytesLeft)) | (getRandBits(8 - bytesLeft)));
 		if (mode == "CBC") {
-			block ^= iv;
+			state = xorState(state, iv);
 		}
 
-		block = des(block, action);
+		state = aes(state, action);
 	}
 
 	// Read file while successfully reading eight 1-byte items, pass through DES, write to outFile.
-	while (fread_s(reinterpret_cast<char*>(&block), 8, 1, 8, inStream) == 8) {
-		block = _byteswap_uint64(block);
+	while (fread_s(reinterpret_cast<char*>(&block), 1, 1, 1, inStream) == 1) {
 
 		//If CBC and Encrypting, XOR block with iv
 		//If CBC and Decrypting, save ciphertext block for next iv in tempIV
 		if (mode == "CBC" && action == "E") {
-			block ^= iv;
+			state = xorState(state, iv);
 		}
 		else if (mode == "CBC" && action == "D") {
-			tempIV = block;
+			tempIV = state;
 		}
 
-		block = des(block, action);
+		state = aes(state, action);
 
 		//If CBC and Encrypting, set next iv to ciphertext block
 		//If CBC and Decrypting, XOR block with iv, set next iv from tempIV
 		if (mode == "CBC" && action == "D") {
-			block ^= iv;
+			state = xorState(state, iv);
 			iv = tempIV;
 		}
 		else if (mode == "CBC" && action == "E") {
-			iv = block;
+			iv = state;
 		}
 
 		if (action == "D" && (ftell(inStream) == size)) {
 			shiftAmt = (bytesLeft * 8);
-			block >>= shiftAmt;
+			//block >>= shiftAmt;
 			writeSize = (8 - bytesLeft);
-			fwrite(reinterpret_cast<char*>(&block), 1, writeSize, outStream);
+			//fwrite(reinterpret_cast<char*>(&block), 1, writeSize, outStream);
 			goto END;
 		}
 
-		block = _byteswap_uint64(block);
-		fwrite(reinterpret_cast<char*>(&block), 1, writeSize, outStream);
-		block = 0;
+		//fwrite(reinterpret_cast<char*>(&block), 1, writeSize, outStream);
+		//block = 0;
 	};
 
 	// Catch any bytes left over, push them left the appropriate amount, pad with random bytes.
 	if ((bytesLeft > 0) && (action == "E")) {
-		block &= getHexfBytes(bytesLeft);
+		//block &= getHexfBytes(bytesLeft);
 		shiftAmt = ((8 - bytesLeft) * 8);
-		block <<= shiftAmt;
-		block |= getRandBits(8 - bytesLeft);
+		//block <<= shiftAmt;
+		//block |= getRandBits(8 - bytesLeft);
 
 		if (mode == "CBC" && action == "E") {
-			block ^= iv;
+			state = xorState(state, iv);
 		}
 
-		block = des(block, action);
+		state = aes(state, action);
 
 		if (mode == "CBC" && action == "D") {
-			block ^= iv;
+			state = xorState(state, iv);
 		}
-
-		block = _byteswap_uint64(block);
-		fwrite(reinterpret_cast<char*>(&block), 1, writeSize, outStream);
+		//fwrite(reinterpret_cast<char*>(&block), 1, writeSize, outStream);
 	}
+
 END:
 	fclose(inStream);
 	fclose(outStream);
