@@ -427,88 +427,6 @@ stateStruct aes(stateStruct state, string actionType) {
 	return state;
 }
 
-//XORs two states
-stateStruct xorState(stateStruct state1, stateStruct state2) {
-	state1.curState[0][0] ^= state2.curState[0][0];
-	state1.curState[1][0] ^= state2.curState[0][0];
-	state1.curState[2][0] ^= state2.curState[0][0];
-	state1.curState[3][0] ^= state2.curState[0][0];
-	state1.curState[0][1] ^= state2.curState[0][0];
-	state1.curState[1][1] ^= state2.curState[0][0];
-	state1.curState[2][1] ^= state2.curState[0][0];
-	state1.curState[3][1] ^= state2.curState[0][0];
-	state1.curState[0][2] ^= state2.curState[0][0];
-	state1.curState[1][2] ^= state2.curState[0][0];
-	state1.curState[2][2] ^= state2.curState[0][0];
-	state1.curState[3][2] ^= state2.curState[0][0];
-	state1.curState[0][3] ^= state2.curState[0][0];
-	state1.curState[1][3] ^= state2.curState[0][0];
-	state1.curState[2][3] ^= state2.curState[0][0];
-	state1.curState[3][3] ^= state2.curState[0][0];
-
-	return state1;
-}
-
-//Reads a state from the infile
-stateStruct readState(bool partialState, int bytesToRead = 16){
-	stateStruct state;
-	
-	if (!partialState) {
-		state.curState[0][0] = inFile.get();
-		state.curState[1][0] = inFile.get();
-		state.curState[2][0] = inFile.get();
-		state.curState[3][0] = inFile.get();
-		state.curState[0][1] = inFile.get();
-		state.curState[1][1] = inFile.get();
-		state.curState[2][1] = inFile.get();
-		state.curState[3][1] = inFile.get();
-		state.curState[0][2] = inFile.get();
-		state.curState[1][2] = inFile.get();
-		state.curState[2][2] = inFile.get();
-		state.curState[3][2] = inFile.get();
-		state.curState[0][3] = inFile.get();
-		state.curState[1][3] = inFile.get();
-		state.curState[2][3] = inFile.get();
-		state.curState[3][3] = inFile.get();
-	}
-	else {
-		int i = 0;
-		int j = 0;
-			for (bytesToRead; bytesToRead > 0; bytesToRead--) {
-				state.curState[i][j] = inFile.get();
-			}
-			state.curState[i][j] = getRandBytes(1);
-	}
-
-	return state;
-}
-
-//Writes a state to the outfile
-void writeState(stateStruct state, bool partialState, int bytesToWrite = 0) {
-	if (!partialState) {
-		outFile << state.curState[0][0];
-		outFile << state.curState[1][0];
-		outFile << state.curState[2][0];
-		outFile << state.curState[3][0];
-		outFile << state.curState[0][1];
-		outFile << state.curState[1][1];
-		outFile << state.curState[2][1];
-		outFile << state.curState[3][1];
-		outFile << state.curState[0][2];
-		outFile << state.curState[1][2];
-		outFile << state.curState[2][2];
-		outFile << state.curState[3][2];
-		outFile << state.curState[0][3];
-		outFile << state.curState[1][3];
-		outFile << state.curState[2][3];
-		outFile << state.curState[3][3];
-	}
-	else {
-
-	}
-	
-}
-
 //Checks valid mode - ARM
 bool validMode(string mode) {
 	if (mode == "ECB" || mode == "CBC") {
@@ -551,16 +469,6 @@ bool validAction(string action) {
 	}
 }
 
-//Creates necessary hex bytes to and with buffer that should contain less than 8 bytes
-ull getHexfBytes(size_t bytesLeft) {
-	ull hexBytes = 0;
-	for (size_t i = 0; i < bytesLeft; i++) {
-		hexBytes <<= 8;
-		hexBytes |= 0xff;
-	}
-	return hexBytes;
-}
-
 //Creates Random Pad Bytes
 ull getRandBytes(int numToPad) {
 	ull randBytes = 0;
@@ -570,6 +478,110 @@ ull getRandBytes(int numToPad) {
 		randBytes |= (rand() % 255);
 	};
 	return randBytes;
+}
+
+//XORs two states
+stateStruct xorState(stateStruct state1, stateStruct state2) {
+	state1.curState[0][0] ^= state2.curState[0][0];
+	state1.curState[1][0] ^= state2.curState[0][0];
+	state1.curState[2][0] ^= state2.curState[0][0];
+	state1.curState[3][0] ^= state2.curState[0][0];
+	state1.curState[0][1] ^= state2.curState[0][0];
+	state1.curState[1][1] ^= state2.curState[0][0];
+	state1.curState[2][1] ^= state2.curState[0][0];
+	state1.curState[3][1] ^= state2.curState[0][0];
+	state1.curState[0][2] ^= state2.curState[0][0];
+	state1.curState[1][2] ^= state2.curState[0][0];
+	state1.curState[2][2] ^= state2.curState[0][0];
+	state1.curState[3][2] ^= state2.curState[0][0];
+	state1.curState[0][3] ^= state2.curState[0][0];
+	state1.curState[1][3] ^= state2.curState[0][0];
+	state1.curState[2][3] ^= state2.curState[0][0];
+	state1.curState[3][3] ^= state2.curState[0][0];
+
+	return state1;
+}
+
+//Reads a state from the infile
+stateStruct readState(bool partialState, int bytesToRead = 16) {
+	stateStruct state;
+
+	if (!partialState) {
+		state.curState[0][0] = inFile.get();
+		state.curState[1][0] = inFile.get();
+		state.curState[2][0] = inFile.get();
+		state.curState[3][0] = inFile.get();
+		state.curState[0][1] = inFile.get();
+		state.curState[1][1] = inFile.get();
+		state.curState[2][1] = inFile.get();
+		state.curState[3][1] = inFile.get();
+		state.curState[0][2] = inFile.get();
+		state.curState[1][2] = inFile.get();
+		state.curState[2][2] = inFile.get();
+		state.curState[3][2] = inFile.get();
+		state.curState[0][3] = inFile.get();
+		state.curState[1][3] = inFile.get();
+		state.curState[2][3] = inFile.get();
+		state.curState[3][3] = inFile.get();
+	}
+	else {
+		int i = 0;
+		int j = 0;
+		//Reads the specified number of bytes into the state
+		for (bytesToRead; bytesToRead > 0; bytesToRead--) {
+			state.curState[i][j] = inFile.get();
+			if (i == 3) {
+				i = 0;
+				j++;
+			}
+			i++;
+		}
+		//Fills remainder of state with random bytes
+		for (j; j <= 3; j++) {
+			for (i; i <= 3; i++) {
+				state.curState[i][j] = getRandBytes(1);
+			}
+			i = 0;
+		}
+	}
+
+	return state;
+}
+
+//Writes a state to the outfile
+void writeState(stateStruct state, bool partialState, int bytesToWrite = 0) {
+	if (!partialState) {
+		outFile << state.curState[0][0];
+		outFile << state.curState[1][0];
+		outFile << state.curState[2][0];
+		outFile << state.curState[3][0];
+		outFile << state.curState[0][1];
+		outFile << state.curState[1][1];
+		outFile << state.curState[2][1];
+		outFile << state.curState[3][1];
+		outFile << state.curState[0][2];
+		outFile << state.curState[1][2];
+		outFile << state.curState[2][2];
+		outFile << state.curState[3][2];
+		outFile << state.curState[0][3];
+		outFile << state.curState[1][3];
+		outFile << state.curState[2][3];
+		outFile << state.curState[3][3];
+	}
+	else {
+		int i = 0;
+		int j = 0;
+		//Writes the specified number of bytes into the state
+		for (bytesToWrite; bytesToWrite > 0; bytesToWrite--) {
+			outFile << state.curState[i][j];
+			if (i == 3) {
+				i = 0;
+				j++;
+			}
+			i++;
+		}
+	}
+
 }
 
 //Converts a string to all uppercase characters - ARM
@@ -589,8 +601,8 @@ int main(int argc, char* argv[]) {
 	double secondsElapsed;
 	string action, mode, keyStr, keyByte;
 	streampos begF, endF;
-	int bytesLeft = 0, fileSize = 0, readSize = 0, shiftAmt = 0, readCnt = 0;
-	unsigned int byte;
+	int bytesLeft = 0, readCnt = 0;
+	unsigned int byte, fileSize, readSize;
 	errno_t err;
 	stateStruct state, iv, tempIV;
 	ull block;
@@ -726,7 +738,6 @@ int main(int argc, char* argv[]) {
 	This value will be the number of random bytes padded on, so subtracting this number
 	from 8-bytes will give the number of padded bytes (8-padded bytes will be what we want to keep)
 	*/
-	state.curState[4][4] = {0};
 	keygen();
 	
 	if (action == "E") {
@@ -781,7 +792,8 @@ int main(int argc, char* argv[]) {
 		}
 
 		writeState(state, false);
-		bytesLeft = (fileSize % 16);
+		bytesLeft = fileSize % 16;
+		readCnt = fileSize / 16;
 	}
 	else {
 		//Decrypting. If CBC, read first block -> decrypt = IV. Then read size block.
@@ -865,9 +877,8 @@ int main(int argc, char* argv[]) {
 	// Read remaining bytes. If encrypting, we append random bits during read to give 128-bit state
 	// Write result. If decrypting, only write the correct amount of bytes left, not the extra padding.
 	if (bytesLeft > 0) {
-		state = readState(true, bytesLeft);
-
 		if (action == "E") {
+			state = readState(true, bytesLeft);
 			if (mode == "CBC") {
 				state = xorState(state, iv);
 			}
@@ -875,6 +886,7 @@ int main(int argc, char* argv[]) {
 			writeState(state, false);
 		}
 		else if (action == "D") {
+			state = readState(false);
 			state = aes(state, action);
 			if (mode == "CBC") {
 				state = xorState(state, iv);
