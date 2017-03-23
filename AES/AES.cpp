@@ -449,46 +449,54 @@ stateStruct xorState(stateStruct state1, stateStruct state2) {
 	return state1;
 }
 
-stateStruct readState(){
+//Reads a state from the infile
+stateStruct readState(bool partialState, int bytesToRead = 16){
 	stateStruct state;
-	fread_s(reinterpret_cast<char*>(state.curState[0][0]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[1][0]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[2][0]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[3][0]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[0][1]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[1][1]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[2][1]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[3][1]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[0][2]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[1][2]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[2][2]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[3][2]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[0][3]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[1][3]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[2][3]), 1, 1, 1, inStream);
-	fread_s(reinterpret_cast<char*>(state.curState[3][3]), 1, 1, 1, inStream);
+	
+	if (!partialState) {
+		state.curState[0][0] = inFile.get();
+		state.curState[1][0] = inFile.get();
+		state.curState[2][0] = inFile.get();
+		state.curState[3][0] = inFile.get();
+		state.curState[0][1] = inFile.get();
+		state.curState[1][1] = inFile.get();
+		state.curState[2][1] = inFile.get();
+		state.curState[3][1] = inFile.get();
+		state.curState[0][2] = inFile.get();
+		state.curState[1][2] = inFile.get();
+		state.curState[2][2] = inFile.get();
+		state.curState[3][2] = inFile.get();
+		state.curState[0][3] = inFile.get();
+		state.curState[1][3] = inFile.get();
+		state.curState[2][3] = inFile.get();
+		state.curState[3][3] = inFile.get();
+	}
+	else {
+
+	}
 
 	return state;
 }
 
 //Writes a state to the outfile
 void writeState(stateStruct state) {
-	fwrite(state.curState[0][0], 1, 1, outStream);
-	fwrite(state.curState[1][0], 1, 1, outStream);
-	fwrite(state.curState[2][0], 1, 1, outStream);
-	fwrite(state.curState[3][0], 1, 1, outStream);
-	fwrite(state.curState[0][1], 1, 1, outStream);
-	fwrite(state.curState[1][1], 1, 1, outStream);
-	fwrite(state.curState[2][1], 1, 1, outStream);
-	fwrite(state.curState[3][1], 1, 1, outStream);
-	fwrite(state.curState[0][2], 1, 1, outStream);
-	fwrite(state.curState[1][2], 1, 1, outStream);
-	fwrite(state.curState[2][2], 1, 1, outStream);
-	fwrite(state.curState[3][2], 1, 1, outStream);
-	fwrite(state.curState[0][3], 1, 1, outStream);
-	fwrite(state.curState[1][3], 1, 1, outStream);
-	fwrite(state.curState[2][3], 1, 1, outStream);
-	fwrite(state.curState[3][3], 1, 1, outStream);
+	outFile << state.curState[0][0];
+	outFile << state.curState[1][0];
+	outFile << state.curState[2][0];
+	outFile << state.curState[3][0];
+	outFile << state.curState[0][1];
+	outFile << state.curState[1][1];
+	outFile << state.curState[2][1];
+	outFile << state.curState[3][1];
+	outFile << state.curState[0][2];
+	outFile << state.curState[1][2];
+	outFile << state.curState[2][2];
+	outFile << state.curState[3][2];
+	outFile << state.curState[0][3];
+	outFile << state.curState[1][3];
+	outFile << state.curState[2][3];
+	outFile << state.curState[3][3];
+	
 }
 
 //Checks valid mode - ARM
@@ -571,7 +579,7 @@ int main(int argc, char* argv[]) {
 	double secondsElapsed;
 	string action, mode, keyStr, keyByte;
 	streampos begF, endF;
-	int bytesLeft, size, shiftAmt, writeSize;
+	int bytesLeft, size, shiftAmt, writeSize, curPos;
 	unsigned int byte;
 	errno_t err;
 	stateStruct state, iv, tempIV;
@@ -709,7 +717,7 @@ int main(int argc, char* argv[]) {
 	from 8-bytes will give the number of padded bytes (8-padded bytes will be what we want to keep)
 	*/
 	state.curState[4][4] = {0};
-	writeSize = 8;
+	writeSize = 16;
 	keygen();
 	
 	if (action == "E") {
@@ -763,18 +771,18 @@ int main(int argc, char* argv[]) {
 			iv = state;
 		}
 
-		fwrite(reinterpret_cast<char*>(&block), 1, 1, outStream);
+		writeState(state);
 		bytesLeft = (size % 16);
 	}
 	else {
 		//Decrypting. If CBC, read first block -> decrypt = IV. Then read size block.
 		//Else, just read size block.
 		if (mode == "CBC") {
-			fread_s(reinterpret_cast<char*>(&iv), 8, 1, 8, inStream);
+			iv = readState(false);
 			iv = aes(iv, action);
 		}
 
-		fread_s(reinterpret_cast<char*>(&block), 1, 1, 1, inStream);
+		state = readState(false);
 
 		//If CBC, next round's iv = ciphertext block
 		if (mode == "CBC") {
@@ -797,19 +805,17 @@ int main(int argc, char* argv[]) {
 
 	// If filesize is less than 8 bytes, only read that amount, padding appropriately before passing through DES.
 	// Guaranteed to be encrpytion if this is true because an encrypted file being decrypted would have at least 9 bytes.
-	if (size < 8) {
-		//fread_s(reinterpret_cast<char*>(&block), bytesLeft, 1, bytesLeft, inStream
-		//block = (((block & getHexfBytes(bytesLeft)) << (8 - bytesLeft)) | (getRandBits(8 - bytesLeft)));
+	if (size < 16) {
+		state = readState(true, 16 - size);
 		if (mode == "CBC") {
 			state = xorState(state, iv);
 		}
-
 		state = aes(state, action);
 	}
 
-	// Read file while successfully reading eight 1-byte items, pass through DES, write to outFile.
-	while (fread_s(reinterpret_cast<char*>(&block), 1, 1, 1, inStream) == 1) {
-
+	// Read file, pass through DES, write to outFile.
+	while (size != 0) {
+		state = readState(false);
 		//If CBC and Encrypting, XOR block with iv
 		//If CBC and Decrypting, save ciphertext block for next iv in tempIV
 		if (mode == "CBC" && action == "E") {
@@ -831,15 +837,16 @@ int main(int argc, char* argv[]) {
 			iv = state;
 		}
 
-		if (action == "D" && (ftell(inStream) == size)) {
+		curPos = inFile.tellg();
+		if (action == "D" && (curPos == size)) {
 			shiftAmt = (bytesLeft * 8);
 			//block >>= shiftAmt;
 			writeSize = (8 - bytesLeft);
-			//fwrite(reinterpret_cast<char*>(&block), 1, writeSize, outStream);
+			writeState(state);
 			goto END;
 		}
 
-		//fwrite(reinterpret_cast<char*>(&block), 1, writeSize, outStream);
+		writeState(state);
 		//block = 0;
 	};
 
@@ -859,12 +866,11 @@ int main(int argc, char* argv[]) {
 		if (mode == "CBC" && action == "D") {
 			state = xorState(state, iv);
 		}
-		//fwrite(reinterpret_cast<char*>(&block), 1, writeSize, outStream);
+		writeState(state);
 	}
 
 END:
-	fclose(inStream);
-	fclose(outStream);
+
 	endTime = clock();
 	secondsElapsed = double(endTime - startTime) / CLOCKS_PER_SEC;
 	cout << fixed << setprecision(3);
