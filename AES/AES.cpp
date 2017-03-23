@@ -551,29 +551,29 @@ stateStruct readState(bool partialState, int bytesToRead = 16) {
 //Writes a state to the outfile
 void writeState(stateStruct state, bool partialState, int bytesToWrite = 0) {
 	if (!partialState) {
-		outFile << state.curState[0][0];
-		outFile << state.curState[1][0];
-		outFile << state.curState[2][0];
-		outFile << state.curState[3][0];
-		outFile << state.curState[0][1];
-		outFile << state.curState[1][1];
-		outFile << state.curState[2][1];
-		outFile << state.curState[3][1];
-		outFile << state.curState[0][2];
-		outFile << state.curState[1][2];
-		outFile << state.curState[2][2];
-		outFile << state.curState[3][2];
-		outFile << state.curState[0][3];
-		outFile << state.curState[1][3];
-		outFile << state.curState[2][3];
-		outFile << state.curState[3][3];
+		outFile.write(reinterpret_cast<char*>(&state.curState[0][0]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[1][0]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[2][0]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[3][0]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[0][1]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[1][1]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[2][1]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[3][1]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[0][2]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[1][2]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[2][2]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[3][2]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[0][3]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[1][3]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[2][3]), 1);
+		outFile.write(reinterpret_cast<char*>(&state.curState[3][3]), 1);
 	}
 	else {
 		int i = 0;
 		int j = 0;
 		//Writes the specified number of bytes into the state
 		for (bytesToWrite; bytesToWrite > 0; bytesToWrite--) {
-			outFile << state.curState[i][j];
+			outFile.write(reinterpret_cast<char*>(&state.curState[i][j]), 1);
 			if (i == 3) {
 				i = 0;
 				j++;
@@ -708,7 +708,7 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	outFile.open(argv[5], ios::out);
+	outFile.open(argv[5], ios::out | ios::binary);
 	if (!outFile) {
 		cout << "Can't open output file " << argv[5] << endl;
 		prompt();
@@ -891,7 +891,7 @@ int main(int argc, char* argv[]) {
 			if (mode == "CBC") {
 				state = xorState(state, iv);
 			}
-			writeState(state, true, bytesLeft);
+			writeState(state, true, (16 - bytesLeft));
 		}
 	}
 
