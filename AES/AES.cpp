@@ -472,30 +472,40 @@ stateStruct readState(bool partialState, int bytesToRead = 16){
 		state.curState[3][3] = inFile.get();
 	}
 	else {
-
+		int i = 0;
+		int j = 0;
+			for (bytesToRead; bytesToRead > 0; bytesToRead--) {
+				state.curState[i][j] = inFile.get();
+			}
+			state.curState[i][j] = getRandBytes(1);
 	}
 
 	return state;
 }
 
 //Writes a state to the outfile
-void writeState(stateStruct state) {
-	outFile << state.curState[0][0];
-	outFile << state.curState[1][0];
-	outFile << state.curState[2][0];
-	outFile << state.curState[3][0];
-	outFile << state.curState[0][1];
-	outFile << state.curState[1][1];
-	outFile << state.curState[2][1];
-	outFile << state.curState[3][1];
-	outFile << state.curState[0][2];
-	outFile << state.curState[1][2];
-	outFile << state.curState[2][2];
-	outFile << state.curState[3][2];
-	outFile << state.curState[0][3];
-	outFile << state.curState[1][3];
-	outFile << state.curState[2][3];
-	outFile << state.curState[3][3];
+void writeState(stateStruct state, bool partialState, int bytesToWrite = 0) {
+	if (!partialState) {
+		outFile << state.curState[0][0];
+		outFile << state.curState[1][0];
+		outFile << state.curState[2][0];
+		outFile << state.curState[3][0];
+		outFile << state.curState[0][1];
+		outFile << state.curState[1][1];
+		outFile << state.curState[2][1];
+		outFile << state.curState[3][1];
+		outFile << state.curState[0][2];
+		outFile << state.curState[1][2];
+		outFile << state.curState[2][2];
+		outFile << state.curState[3][2];
+		outFile << state.curState[0][3];
+		outFile << state.curState[1][3];
+		outFile << state.curState[2][3];
+		outFile << state.curState[3][3];
+	}
+	else {
+
+	}
 	
 }
 
@@ -579,7 +589,7 @@ int main(int argc, char* argv[]) {
 	double secondsElapsed;
 	string action, mode, keyStr, keyByte;
 	streampos begF, endF;
-	int bytesLeft, size, shiftAmt, writeSize, curPos;
+	int bytesLeft = 0, fileSize = 0, readSize = 0, shiftAmt = 0, readCnt = 0;
 	unsigned int byte;
 	errno_t err;
 	stateStruct state, iv, tempIV;
@@ -697,12 +707,12 @@ int main(int argc, char* argv[]) {
 	begin = inFile.tellg();
 	inFile.seekg(0, ios::end);
 	end = inFile.tellg();
-	size = (end - begin);
+	fileSize = (end - begin);
 	inFile.seekg(0, ios::beg);
 
 
 	//	Filesize limit of 31 bits. - ARM
-	if (size > 2147483647) {
+	if (fileSize > 2147483647) {
 		cout << "File is too large to open. Must be <= 31 bits of data." << endl;
 		prompt();
 		return 1;
@@ -717,7 +727,6 @@ int main(int argc, char* argv[]) {
 	from 8-bytes will give the number of padded bytes (8-padded bytes will be what we want to keep)
 	*/
 	state.curState[4][4] = {0};
-	writeSize = 16;
 	keygen();
 	
 	if (action == "E") {
@@ -737,10 +746,10 @@ int main(int argc, char* argv[]) {
 		state.curState[1][2] = getRandBytes(1);
 		state.curState[2][2] = getRandBytes(1);
 		state.curState[3][2] = getRandBytes(1);
-		state.curState[0][3] = ((size & 0xff000000) >> 24);
-		state.curState[1][3] = ((size & 0x00ff0000) >> 16);
-		state.curState[2][3] = ((size & 0x0000ff00) >> 8);
-		state.curState[3][3] = (size & 0x000000ff);
+		state.curState[0][3] = ((fileSize & 0xff000000) >> 24);
+		state.curState[1][3] = ((fileSize & 0x00ff0000) >> 16);
+		state.curState[2][3] = ((fileSize & 0x0000ff00) >> 8);
+		state.curState[3][3] = (fileSize & 0x000000ff);
 
 		if (mode == "CBC") {
 			iv.curState[0][0] = getRandBytes(1);
@@ -762,7 +771,7 @@ int main(int argc, char* argv[]) {
 
 			state = xorState(state, iv);
 			iv = aes(iv, action);
-			writeState(iv);
+			writeState(iv, false);
 		}
 
 		state = aes(state, action);
@@ -771,8 +780,8 @@ int main(int argc, char* argv[]) {
 			iv = state;
 		}
 
-		writeState(state);
-		bytesLeft = (size % 16);
+		writeState(state, false);
+		bytesLeft = (fileSize % 16);
 	}
 	else {
 		//Decrypting. If CBC, read first block -> decrypt = IV. Then read size block.
@@ -795,18 +804,31 @@ int main(int argc, char* argv[]) {
 		if (mode == "CBC") {
 			state = xorState(state, iv);
 			iv = tempIV;
-			//bytesLeft = ((size - 16) - (block & 0xffffffff));
+			
+			readSize = state.curState[0][3] << 24;
+			readSize |= state.curState[1][3] << 16;
+			readSize |= state.curState[2][3] << 8;
+			readSize |= state.curState[3][3];
+
+			bytesLeft = (fileSize - 16) - readSize;
+			readCnt = readSize/16;
 		}
 		else {
-			//bytesLeft = ((size - 8) - (block & 0xffffffff));
+			readSize = state.curState[0][3] << 24;
+			readSize |= state.curState[1][3] << 16;
+			readSize |= state.curState[2][3] << 8;
+			readSize |= state.curState[3][3];
+
+			bytesLeft = (fileSize - 8) - readSize;
+			readCnt = readSize/16;
 		}
 	};
 
 
 	// If filesize is less than 8 bytes, only read that amount, padding appropriately before passing through DES.
 	// Guaranteed to be encrpytion if this is true because an encrypted file being decrypted would have at least 9 bytes.
-	if (size < 16) {
-		state = readState(true, 16 - size);
+	if (fileSize < 16) {
+		state = readState(true, bytesLeft);
 		if (mode == "CBC") {
 			state = xorState(state, iv);
 		}
@@ -814,8 +836,10 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Read file, pass through DES, write to outFile.
-	while (size != 0) {
+	while (readCnt > 0) {
+		readCnt--;
 		state = readState(false);
+
 		//If CBC and Encrypting, XOR block with iv
 		//If CBC and Decrypting, save ciphertext block for next iv in tempIV
 		if (mode == "CBC" && action == "E") {
@@ -824,7 +848,6 @@ int main(int argc, char* argv[]) {
 		else if (mode == "CBC" && action == "D") {
 			tempIV = state;
 		}
-
 		state = aes(state, action);
 
 		//If CBC and Encrypting, set next iv to ciphertext block
@@ -836,40 +859,29 @@ int main(int argc, char* argv[]) {
 		else if (mode == "CBC" && action == "E") {
 			iv = state;
 		}
-
-		curPos = inFile.tellg();
-		if (action == "D" && (curPos == size)) {
-			shiftAmt = (bytesLeft * 8);
-			//block >>= shiftAmt;
-			writeSize = (8 - bytesLeft);
-			writeState(state);
-			goto END;
-		}
-
-		writeState(state);
-		//block = 0;
+		writeState(state, false);
 	};
 
-	// Catch any bytes left over, push them left the appropriate amount, pad with random bytes.
-	if ((bytesLeft > 0) && (action == "E")) {
-		//block &= getHexfBytes(bytesLeft);
-		shiftAmt = ((8 - bytesLeft) * 8);
-		//block <<= shiftAmt;
-		//block |= getRandBits(8 - bytesLeft);
+	// Read remaining bytes. If encrypting, we append random bits during read to give 128-bit state
+	// Write result. If decrypting, only write the correct amount of bytes left, not the extra padding.
+	if (bytesLeft > 0) {
+		state = readState(true, bytesLeft);
 
-		if (mode == "CBC" && action == "E") {
-			state = xorState(state, iv);
+		if (action == "E") {
+			if (mode == "CBC") {
+				state = xorState(state, iv);
+			}
+			state = aes(state, action);
+			writeState(state, false);
 		}
-
-		state = aes(state, action);
-
-		if (mode == "CBC" && action == "D") {
-			state = xorState(state, iv);
+		else if (action == "D") {
+			state = aes(state, action);
+			if (mode == "CBC") {
+				state = xorState(state, iv);
+			}
+			writeState(state, true, bytesLeft);
 		}
-		writeState(state);
 	}
-
-END:
 
 	endTime = clock();
 	secondsElapsed = double(endTime - startTime) / CLOCKS_PER_SEC;
