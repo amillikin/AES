@@ -506,6 +506,8 @@ stateStruct xorState(stateStruct state1, stateStruct state2) {
 stateStruct readState(bool partialState, int bytesToRead = 16) {
 	stateStruct state;
 
+	//If not a partial state, just reads one byte at a time
+	//from the file into the respective cell in a state.
 	if (!partialState) {
 		state.curState[0][0] = inFile.get();
 		state.curState[1][0] = inFile.get();
@@ -524,6 +526,7 @@ stateStruct readState(bool partialState, int bytesToRead = 16) {
 		state.curState[2][3] = inFile.get();
 		state.curState[3][3] = inFile.get();
 	}
+	//If partial state, only reads from file the amount needed.
 	else {
 		int i = 0;
 		int j = 0;
@@ -550,6 +553,8 @@ stateStruct readState(bool partialState, int bytesToRead = 16) {
 
 //Writes a state to the outfile
 void writeState(stateStruct state, bool partialState, int bytesToWrite = 0) {
+	//If not a partial state, just writes one byte at a time
+	//to the file from the respective cell of a state.
 	if (!partialState) {
 		outFile.write(reinterpret_cast<char*>(&state.curState[0][0]), 1);
 		outFile.write(reinterpret_cast<char*>(&state.curState[1][0]), 1);
@@ -568,6 +573,7 @@ void writeState(stateStruct state, bool partialState, int bytesToWrite = 0) {
 		outFile.write(reinterpret_cast<char*>(&state.curState[2][3]), 1);
 		outFile.write(reinterpret_cast<char*>(&state.curState[3][3]), 1);
 	}
+	//If partial state, only writes as much as necessary.
 	else {
 		int i = 0;
 		int j = 0;
@@ -729,21 +735,25 @@ int main(int argc, char* argv[]) {
 		prompt();
 		return 1;
 	}
-	/*	Initialize block to 0, writeSize to 8, and generate round keys with hKey.
-	When encrypting, need to encrypt filesize left padded with 32 random bits.
-	When decrypting, need to check filesize by running first block through DES and
-	keeping only the right half by ANDing with 0xffffffff. Take inStream filesize
-	subtract 8 bytes (that were added from the filesize on encryption), then
+	/* Calls keygen function to generate all round keys from the provided key.
+	
+	When encrypting, need to encrypt filesize and pad the left 3 columns of the state with 96 random bits/12 random bytes.
+	Determines how many bytes will be left over after taking filesize (in bytes) mod 16 (bytes).
+	Determines how many times to read before handling any bytes left.
+	
+	When decrypting, need to check filesize by running first state through AES and
+	using only the right most column. Take inStream filesize
+	subtract 16 bytes (that were added from the filesize on encryption), then
 	subtract the newly decrypted filesize to determine any excess bytes.
 	This value will be the number of random bytes padded on, so subtracting this number
-	from 8-bytes will give the number of padded bytes (8-padded bytes will be what we want to keep)
+	from 16-bytes will give the number of padded bytes (16-padded bytes will be what we want to keep)
 	*/
 	keygen();
 	
 	if (action == "E") {
-		//Encrypting size block. Pad size with 32 random bytes.
-		//If CBC, first block is iv set to 64 random bits. XOR plaintext with IV.
-		//Then write encrypted iv to outfile. Next iv = size block ciphertext.
+		//Encrypting size state. Pad size with 96 random bits.
+		//If CBC, first block is iv set to 128 random bits. XOR plaintext with IV.
+		//Then write encrypted iv to outfile. Next iv = size state ciphertext.
 
 		state.curState[0][0] = getRandBytes(1);
 		state.curState[1][0] = getRandBytes(1);
@@ -796,8 +806,8 @@ int main(int argc, char* argv[]) {
 		readCnt = fileSize / 16;
 	}
 	else {
-		//Decrypting. If CBC, read first block -> decrypt = IV. Then read size block.
-		//Else, just read size block.
+		//Decrypting. If CBC, read first state -> decrypt = IV. Then read size state.
+		//Else, just read size state.
 		if (mode == "CBC") {
 			iv = readState(false);
 			iv = aes(iv, action);
@@ -805,14 +815,14 @@ int main(int argc, char* argv[]) {
 
 		state = readState(false);
 
-		//If CBC, next round's iv = ciphertext block
+		//If CBC, next round's iv = ciphertext state
 		if (mode == "CBC") {
 			tempIV = state;
 		}
 
 		state = aes(state, action);
 
-		//If CBC, xor block with iv.
+		//If CBC, xor state with iv.
 		if (mode == "CBC") {
 			state = xorState(state, iv);
 			iv = tempIV;
@@ -847,7 +857,8 @@ int main(int argc, char* argv[]) {
 		state = aes(state, action);
 	}
 
-	// Read file, pass through DES, write to outFile.
+	// Read file for duration of count determined earlier (amount of full 128-bit blocks available)
+	// pass through AES, write to outFile.
 	while (readCnt > 0) {
 		readCnt--;
 		state = readState(false);
@@ -862,8 +873,8 @@ int main(int argc, char* argv[]) {
 		}
 		state = aes(state, action);
 
-		//If CBC and Encrypting, set next iv to ciphertext block
-		//If CBC and Decrypting, XOR block with iv, set next iv from tempIV
+		//If CBC and Encrypting, set next iv to ciphertext state
+		//If CBC and Decrypting, XOR state with iv, set next iv from tempIV
 		if (mode == "CBC" && action == "D") {
 			state = xorState(state, iv);
 			iv = tempIV;
@@ -874,7 +885,7 @@ int main(int argc, char* argv[]) {
 		writeState(state, false);
 	};
 
-	// Read remaining bytes. If encrypting, we append random bits during read to give 128-bit state
+	// Read remaining bytes. If encrypting, we append random bits during read to provide a ensure 128-bit state
 	// Write result. If decrypting, only write the correct amount of bytes left, not the extra padding.
 	if (bytesLeft > 0) {
 		if (action == "E") {
